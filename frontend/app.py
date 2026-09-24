@@ -4,26 +4,47 @@ import streamlit as st
 
 
 def render_research_workspace() -> None:
-    """Render the initial research workspace without calling an API."""
+    """Render the research workspace without calling an API."""
     st.subheader("Research workspace")
     st.caption(
         "Ask a question about the university library collection. "
-        "Answer generation will be connected in a later milestone."
+        "The research assistant will return a grounded answer with sources."
     )
 
     with st.container(border=True):
-        question = st.text_area(
-            "Research question",
-            placeholder="For example: What are the main findings of this thesis?",
-            height=120,
+        with st.form("research_question_form"):
+            question = st.text_area(
+                "Research question",
+                placeholder="For example: What are the main findings of this thesis?",
+                height=120,
+            )
+            submitted = st.form_submit_button(
+                "Ask the library",
+                type="primary",
+                disabled=not question.strip(),
+            )
+
+    if submitted:
+        st.session_state["research_question"] = question.strip()
+
+    if "research_question" not in st.session_state:
+        st.info("Start by entering a research question above.")
+    else:
+        st.subheader("Answer")
+        st.warning(
+            "The backend and retrieval pipeline are not connected yet. "
+            "This is a temporary UI state, not an AI-generated answer."
         )
-        st.button("Search library", type="primary", disabled=not question.strip())
 
-    st.subheader("Answer")
-    st.info("A citation-backed answer will appear here once retrieval is connected.")
+        st.subheader("Sources and citations")
+        st.info("Page-level citations will appear here when retrieval is connected.")
 
-    st.subheader("Sources and citations")
-    st.info("Retrieved documents and page-level citations will appear here.")
+    st.subheader("Follow-up questions")
+    st.text_input(
+        "Ask a follow-up",
+        placeholder="Follow-up questions will use the current research context.",
+        disabled="research_question" not in st.session_state,
+    )
 
 
 def main() -> None:
