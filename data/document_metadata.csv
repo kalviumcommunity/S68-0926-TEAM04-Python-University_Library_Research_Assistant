@@ -1,1 +1,4 @@
 document_id,title,document_type,author,year,subject,source_url
+academic_literature_rag.pdf,"A Retrieval-Augmented Generation Framework for Academic Literature Navigation in Data Science",,Ahmet Yasin Aytar; Kamer Kaya; Kemal Kilic,,,
+knowledge_intensive_nlp.pdf,,,,,,
+rag_survey.pdf,,,,,,
