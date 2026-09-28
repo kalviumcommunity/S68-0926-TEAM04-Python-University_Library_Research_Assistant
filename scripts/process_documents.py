@@ -1,31 +1,12 @@
 """Run the local extraction, cleaning, metadata, and chunking pipeline."""
 
 import argparse
-import csv
 import json
 from pathlib import Path
 
-from rag.chunking.chunker import ChunkingConfig, chunk_pages
-from rag.ingestion.extractor import extract_pdf
-from rag.ingestion.loader import discover_pdf_files
-from rag.ingestion.metadata import DocumentMetadata
-
-
-def load_metadata(metadata_path: Path) -> dict[str, DocumentMetadata]:
-    """Load known document metadata without filling unknown values."""
-    with metadata_path.open(newline="", encoding="utf-8") as metadata_file:
-        return {
-            row["document_id"]: DocumentMetadata(
-                document_id=row["document_id"],
-                title=row["title"] or None,
-                document_type=row["document_type"] or None,
-                author=row["author"] or None,
-                year=int(row["year"]) if row["year"] else None,
-                subject=row["subject"] or None,
-                source_url=row["source_url"] or None,
-            )
-            for row in csv.DictReader(metadata_file)
-        }
+from rag.chunking.chunker import ChunkingConfig
+from rag.ingestion.metadata import load_document_metadata
+from rag.ingestion.pipeline import ingest_documents
 
 
 def process_documents(
@@ -34,34 +15,28 @@ def process_documents(
     output_path: Path,
     config: ChunkingConfig | None = None,
 ) -> int:
-    """Process every raw PDF and write traceable chunks as JSON Lines."""
-    metadata = load_metadata(metadata_path)
+    """Write the structured output of the ingestion pipeline as JSON Lines."""
+    metadata = load_document_metadata(metadata_path)
+    chunks = ingest_documents(raw_dir, metadata=metadata, config=config)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    chunk_count = 0
 
     with output_path.open("w", encoding="utf-8") as output_file:
-        for pdf_path in discover_pdf_files(raw_dir):
-            pages = extract_pdf(pdf_path)
-            document_id = pdf_path.stem
-            document = metadata.get(document_id, DocumentMetadata(document_id))
-            for chunk in chunk_pages(pages, document=document, config=config):
-                output_file.write(
-                    json.dumps(
-                        {
-                            "chunk_id": chunk.chunk_id,
-                            "document_id": chunk.document_id,
-                            "text": chunk.text,
-                            "page": chunk.page,
-                            "section": chunk.section,
-                            "metadata": chunk.metadata,
-                        },
-                        ensure_ascii=False,
-                    )
-                    + "\n"
+        for chunk in chunks:
+            output_file.write(
+                json.dumps(
+                    {
+                        "chunk_id": chunk.chunk_id,
+                        "document_id": chunk.document_id,
+                        "text": chunk.text,
+                        "page": chunk.page,
+                        "section": chunk.section,
+                        "metadata": chunk.metadata,
+                    },
+                    ensure_ascii=False,
                 )
-                chunk_count += 1
-
-    return chunk_count
+                + "\n"
+            )
+    return len(chunks)
 
 
 def main() -> None:

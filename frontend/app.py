@@ -2,6 +2,12 @@
 
 import streamlit as st
 
+from frontend.utils.api_client import (
+    BackendNotConfiguredError,
+    ask_research_backend,
+    build_query_payload,
+)
+
 
 def render_research_workspace() -> None:
     """Render the research workspace without calling an API."""
@@ -26,18 +32,39 @@ def render_research_workspace() -> None:
 
     if submitted:
         st.session_state["research_question"] = question.strip()
+        with st.spinner("Preparing your research request..."):
+            st.session_state["last_request"] = build_query_payload(
+                question.strip()
+            )
+            try:
+                st.session_state["research_response"] = ask_research_backend(
+                    question.strip()
+                )
+                st.session_state["workspace_state"] = "answer"
+            except BackendNotConfiguredError as error:
+                st.session_state["workspace_error"] = str(error)
+                st.session_state["workspace_state"] = "error"
 
     if "research_question" not in st.session_state:
+        st.markdown("### QUESTION")
         st.info("Start by entering a research question above.")
     else:
-        st.subheader("Answer")
-        st.warning(
-            "The backend and retrieval pipeline are not connected yet. "
-            "This is a temporary UI state, not an AI-generated answer."
-        )
+        st.markdown("### QUESTION")
+        st.write(st.session_state["research_question"])
+        st.markdown("### ANSWER")
+        if st.session_state.get("workspace_state") == "error":
+            st.error(st.session_state["workspace_error"])
+        elif st.session_state.get("workspace_state") == "answer":
+            response = st.session_state["research_response"]
+            st.write(response["answer"])
+        else:
+            st.info("Your answer will appear here.")
 
-        st.subheader("Sources and citations")
-        st.info("Page-level citations will appear here when retrieval is connected.")
+        st.markdown("### SOURCES / CITATIONS")
+        if st.session_state.get("workspace_state") == "answer":
+            st.write(st.session_state["research_response"]["citations"])
+        else:
+            st.info("Citations will appear here when the backend is connected.")
 
     st.subheader("Follow-up questions")
     st.text_input(
