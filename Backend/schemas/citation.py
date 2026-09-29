@@ -9,4 +9,3 @@ class Citation(BaseModel):
     page: int | None = None
     section: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
-    
