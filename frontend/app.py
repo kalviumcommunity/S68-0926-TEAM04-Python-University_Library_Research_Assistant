@@ -12,7 +12,7 @@ from frontend.utils.library import (
 
 
 def render_research_workspace() -> None:
-    """Render the research workspace without implementing backend behavior."""
+    """Render the research workspace and its backend response states."""
     st.subheader("Research workspace")
     st.caption(
         "Ask a question about the university library collection. "
@@ -35,6 +35,8 @@ def render_research_workspace() -> None:
 
     if submitted:
         st.session_state["research_question"] = question.strip()
+        st.session_state["workspace_state"] = "loading"
+        st.session_state.pop("workspace_error", None)
         with st.spinner("Preparing your research request..."):
             st.session_state["last_request"] = build_query_payload(
                 question.strip()
@@ -48,48 +50,68 @@ def render_research_workspace() -> None:
                 st.session_state["workspace_error"] = str(error)
                 st.session_state["workspace_state"] = "error"
 
-    if "research_question" not in st.session_state:
-        st.markdown("### QUESTION")
-        st.info("Ask a research question to see the answer and sources here.")
-    else:
-        st.markdown("### QUESTION")
-        with st.container(border=True):
+    st.markdown("### QUESTION")
+    with st.container(border=True):
+        if st.session_state.get("research_question"):
             st.write(st.session_state["research_question"])
+        else:
+            st.info("Your submitted research question will appear here.")
 
-        answer_column, sources_column = st.columns(2)
-        with answer_column:
-            st.markdown("### ANSWER")
-            with st.container(border=True):
-                if st.session_state.get("workspace_state") == "error":
-                    st.error(st.session_state["workspace_error"])
-                elif st.session_state.get("workspace_state") == "answer":
-                    response = st.session_state["research_response"]
-                    st.write(response["answer"])
+    answer_column, sources_column = st.columns(2)
+    with answer_column:
+        st.markdown("### ANSWER")
+        with st.container(border=True):
+            state = st.session_state.get("workspace_state")
+            if state == "error":
+                st.error(st.session_state["workspace_error"])
+            elif state == "answer":
+                st.write(st.session_state["research_response"]["answer"])
+            elif state == "loading":
+                st.info("Preparing your grounded answer...")
+            else:
+                st.info("Your grounded answer will appear here after you ask a question.")
+
+    with sources_column:
+        st.markdown("### SOURCES / CITATIONS")
+        with st.container(border=True):
+            if st.session_state.get("workspace_state") == "answer":
+                citations = st.session_state["research_response"]["citations"]
+                if citations:
+                    for citation in citations:
+                        title = citation.get("title") or citation.get("document_id")
+                        page = citation.get("page")
+                        page_label = f" — page {page}" if page else ""
+                        st.markdown(f"- **{title}**{page_label}")
                 else:
-                    st.info("Your grounded answer will appear here.")
+                    st.info("No citations were returned for this question.")
+            else:
+                st.info("Citations will appear here with the grounded answer.")
 
-        with sources_column:
-            st.markdown("### SOURCES / CITATIONS")
-            with st.container(border=True):
-                if st.session_state.get("workspace_state") == "answer":
-                    st.write(st.session_state["research_response"]["citations"])
-                else:
-                    st.info(
-                        "Page-level citations and source metadata will appear "
-                        "here when the backend is connected."
-                    )
+    st.markdown("### FOLLOW-UP")
+    with st.form("follow_up_form"):
+        follow_up = st.text_input(
+            "Follow-up question",
+            placeholder="Ask a follow-up using the same research context.",
+        )
+        follow_up_submitted = st.form_submit_button(
+            "Ask follow-up",
+            type="secondary",
+            disabled=not follow_up.strip(),
+        )
 
-        st.markdown("### FOLLOW-UP")
-        with st.form("follow_up_form"):
-            follow_up = st.text_input(
-                "Follow-up question",
-                placeholder="Ask a follow-up using the same research context.",
-            )
-            st.form_submit_button(
-                "Ask follow-up",
-                type="secondary",
-                disabled=not follow_up.strip(),
-            )
+    if follow_up_submitted:
+        st.session_state["research_question"] = follow_up.strip()
+        st.session_state["workspace_state"] = "loading"
+        st.session_state.pop("workspace_error", None)
+        with st.spinner("Preparing your follow-up..."):
+            try:
+                st.session_state["research_response"] = ask_research_backend(
+                    follow_up.strip()
+                )
+                st.session_state["workspace_state"] = "answer"
+            except BackendRequestError as error:
+                st.session_state["workspace_error"] = str(error)
+                st.session_state["workspace_state"] = "error"
 
 
 @st.cache_data
