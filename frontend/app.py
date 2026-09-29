@@ -15,7 +15,7 @@ from frontend.utils.library import (
 
 
 def render_research_workspace() -> None:
-    """Render the research workspace without calling an API."""
+    """Render the research workspace without implementing backend behavior."""
     st.subheader("Research workspace")
     st.caption(
         "Ask a question about the university library collection. "
@@ -23,6 +23,7 @@ def render_research_workspace() -> None:
     )
 
     with st.container(border=True):
+        st.markdown("#### Ask a research question")
         with st.form("research_question_form"):
             question = st.text_area(
                 "Research question",
@@ -55,28 +56,43 @@ def render_research_workspace() -> None:
         st.info("Ask a research question to see the answer and sources here.")
     else:
         st.markdown("### QUESTION")
-        st.write(st.session_state["research_question"])
-        st.markdown("### ANSWER")
-        if st.session_state.get("workspace_state") == "error":
-            st.error(st.session_state["workspace_error"])
-        elif st.session_state.get("workspace_state") == "answer":
-            response = st.session_state["research_response"]
-            st.write(response["answer"])
-        else:
-            st.info("Your answer will appear here.")
+        with st.container(border=True):
+            st.write(st.session_state["research_question"])
 
-        st.markdown("### SOURCES / CITATIONS")
-        if st.session_state.get("workspace_state") == "answer":
-            st.write(st.session_state["research_response"]["citations"])
-        else:
-            st.info("Citations will appear here when the backend is connected.")
+        answer_column, sources_column = st.columns(2)
+        with answer_column:
+            st.markdown("### ANSWER")
+            with st.container(border=True):
+                if st.session_state.get("workspace_state") == "error":
+                    st.error(st.session_state["workspace_error"])
+                elif st.session_state.get("workspace_state") == "answer":
+                    response = st.session_state["research_response"]
+                    st.write(response["answer"])
+                else:
+                    st.info("Your grounded answer will appear here.")
 
-    st.subheader("Follow-up questions")
-    st.text_input(
-        "Ask a follow-up",
-        placeholder="Follow-up questions will use the current research context.",
-        disabled="research_question" not in st.session_state,
-    )
+        with sources_column:
+            st.markdown("### SOURCES / CITATIONS")
+            with st.container(border=True):
+                if st.session_state.get("workspace_state") == "answer":
+                    st.write(st.session_state["research_response"]["citations"])
+                else:
+                    st.info(
+                        "Page-level citations and source metadata will appear "
+                        "here when the backend is connected."
+                    )
+
+        st.markdown("### FOLLOW-UP")
+        with st.form("follow_up_form"):
+            follow_up = st.text_input(
+                "Follow-up question",
+                placeholder="Ask a follow-up using the same research context.",
+            )
+            st.form_submit_button(
+                "Ask follow-up",
+                type="secondary",
+                disabled=not follow_up.strip(),
+            )
 
 
 @st.cache_data
@@ -141,37 +157,11 @@ def render_document_card(library_document: LibraryDocument) -> None:
             "Use in research",
             key=f"use-{metadata.document_id}",
         ):
-            st.session_state["selected_document_id"] = metadata.document_id
             st.session_state["research_question"] = (
                 f"Help me research the document: {metadata.title or metadata.document_id}"
             )
             st.session_state["workspace_state"] = "idle"
             st.info("Document selected. Continue in the Research workspace.")
-
-
-def render_document_viewer() -> None:
-    """Render a stable-ID document selection placeholder."""
-    st.subheader("Document investigation")
-    document_id = st.session_state.get("selected_document_id")
-    if not document_id:
-        st.info("Select a document from Library documents to investigate it.")
-        return
-
-    documents = get_library_documents()
-    selected = next(
-        (document for document in documents if document.metadata.document_id == document_id),
-        None,
-    )
-    if selected is None:
-        st.error("The selected document is no longer available in the catalog.")
-        return
-
-    st.markdown(f"### {selected.metadata.title or document_id}")
-    st.caption(f"Document ID: {document_id}")
-    if selected.excerpt:
-        st.write(selected.excerpt)
-    else:
-        st.info("No processed text is available for this document.")
 
 
 def main() -> None:
@@ -194,11 +184,6 @@ def main() -> None:
                 render_library_documents,
                 title="Library documents",
                 icon=":material/library_books:",
-            ),
-            st.Page(
-                render_document_viewer,
-                title="Document investigation",
-                icon=":material/menu_book:",
             ),
         ]
     )
