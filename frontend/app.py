@@ -30,10 +30,12 @@ def render_research_workspace() -> None:
             submitted = st.form_submit_button(
                 "Ask the library",
                 type="primary",
-                disabled=not question.strip(),
             )
 
     if submitted:
+        if not question.strip():
+            st.warning("Enter a research question before asking the library.")
+            return
         st.session_state["research_question"] = question.strip()
         st.session_state["workspace_state"] = "loading"
         st.session_state.pop("workspace_error", None)
@@ -96,10 +98,12 @@ def render_research_workspace() -> None:
         follow_up_submitted = st.form_submit_button(
             "Ask follow-up",
             type="secondary",
-            disabled=not follow_up.strip(),
         )
 
     if follow_up_submitted:
+        if not follow_up.strip():
+            st.warning("Enter a follow-up question before submitting.")
+            return
         st.session_state["research_question"] = follow_up.strip()
         st.session_state["workspace_state"] = "loading"
         st.session_state.pop("workspace_error", None)
