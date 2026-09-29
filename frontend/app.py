@@ -3,7 +3,7 @@
 import streamlit as st
 
 from frontend.utils.api_client import (
-    BackendNotConfiguredError,
+    BackendRequestError,
     ask_research_backend,
     build_query_payload,
 )
@@ -47,7 +47,7 @@ def render_research_workspace() -> None:
                     question.strip()
                 )
                 st.session_state["workspace_state"] = "answer"
-            except BackendNotConfiguredError as error:
+            except BackendRequestError as error:
                 st.session_state["workspace_error"] = str(error)
                 st.session_state["workspace_state"] = "error"
 
