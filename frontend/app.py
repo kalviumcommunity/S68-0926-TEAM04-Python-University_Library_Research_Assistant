@@ -2,11 +2,8 @@
 
 import streamlit as st
 
-from frontend.utils.api_client import (
-    BackendRequestError,
-    ask_research_backend,
-    build_query_payload,
-)
+from frontend.utils.api_client import ask_research_backend, build_query_payload
+from frontend.utils.errors import BackendRequestError
 from frontend.utils.library import (
     LibraryDocument,
     load_library_documents,

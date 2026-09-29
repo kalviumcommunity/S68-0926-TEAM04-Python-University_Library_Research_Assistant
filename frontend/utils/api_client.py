@@ -5,9 +5,7 @@ from typing import Any
 
 import httpx
 
-
-class BackendRequestError(RuntimeError):
-    """Raised when the backend cannot return a usable research response."""
+from frontend.utils.errors import BackendRequestError
 
 
 BackendNotConfiguredError = BackendRequestError
