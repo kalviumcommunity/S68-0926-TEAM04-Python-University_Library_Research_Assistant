@@ -1,11 +1,4 @@
-from dataclasses import dataclass
-
-
-@dataclass
-class BaseModel:
-    """Minimal local model base used when the optional Pydantic dependency is unavailable."""
-
-    pass
+from pydantic import BaseModel
 
 
 class Document(BaseModel):

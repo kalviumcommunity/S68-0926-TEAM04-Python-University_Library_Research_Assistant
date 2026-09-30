@@ -1,6 +1,6 @@
 # pyright: reportMissingImports=false
 from typing import Any
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Citation(BaseModel):
@@ -8,5 +8,4 @@ class Citation(BaseModel):
     title: str
     page: int | None = None
     section: str | None = None
-    metadata: dict[str, Any] = {}
-    
+    metadata: dict[str, Any] = Field(default_factory=dict)

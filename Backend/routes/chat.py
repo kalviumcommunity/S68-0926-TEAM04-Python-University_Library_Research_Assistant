@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 
-from backend.schemas.chat import ChatRequest, ChatResponse
-from backend.services.rag_service import (
+from Backend.schemas.chat import ChatRequest, ChatResponse
+from Backend.services.rag_service import (
     RAGService,
     RAGServiceUnavailable,
 )
@@ -19,9 +19,25 @@ def chat(request: ChatRequest):
             request.filters,
         )
 
+        if not evidence:
+            return ChatResponse(
+                answer="No supporting evidence was found in the library documents.",
+                citations=[],
+            )
+
         return ChatResponse(
-            answer="RAG evidence retrieved successfully.",
-            citations=[],
+            answer=evidence[0]["text"],
+            citations=[
+                {
+                    "document_id": chunk["document_id"],
+                    "title": chunk["metadata"].get("title")
+                    or chunk["document_id"],
+                    "page": chunk.get("page"),
+                    "section": chunk.get("section"),
+                    "metadata": chunk["metadata"],
+                }
+                for chunk in evidence
+            ],
         )
 
     except RAGServiceUnavailable as exc:

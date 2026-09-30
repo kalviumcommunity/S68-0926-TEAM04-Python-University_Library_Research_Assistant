@@ -1,7 +1,7 @@
-from fastapi import FastAPI  # type: ignore[reportMissingImports]
+from fastapi import FastAPI
 
-from routes.chat import router as chat_router
-from routes.health import router as health_router
+from Backend.routes.chat import router as chat_router
+from Backend.routes.health import router as health_router
 
 
 app = FastAPI(

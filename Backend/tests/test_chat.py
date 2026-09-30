@@ -1,8 +1,8 @@
 from fastapi.testclient import TestClient
 
-from backend.main import app
-from backend.schemas.chat import ChatResponse
-from backend.schemas.citation import Citation
+from Backend.main import app
+from Backend.schemas.chat import ChatResponse
+from Backend.schemas.citation import Citation
 
 
 client = TestClient(app)
@@ -17,7 +17,9 @@ def test_chat_valid_request():
         },
     )
 
-    assert response.status_code == 503
+    assert response.status_code == 200
+    assert response.json()["answer"]
+    assert response.json()["citations"]
 
 
 def test_chat_empty_question():
