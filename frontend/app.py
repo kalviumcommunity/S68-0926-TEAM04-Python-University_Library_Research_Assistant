@@ -1,4 +1,4 @@
-"""Streamlit shell for the University Library Research Assistant."""
+"""Four-screen Streamlit product foundation for the research assistant."""
 
 import streamlit as st
 
@@ -11,9 +11,50 @@ from frontend.utils.library import (
 )
 
 
+def render_landing() -> None:
+    """Introduce the product and expose the two primary entry points."""
+    st.header("Research smarter with your library")
+    st.write(
+        "Find concise, citation-backed explanations grounded in the "
+        "university's academic document collection."
+    )
+
+    st.markdown("### From discovery to synthesis")
+    flow_columns = st.columns(4)
+    for column, number, title, description in zip(
+        flow_columns,
+        ("01", "02", "03", "04"),
+        ("Discover", "Search", "Investigate", "Synthesize"),
+        (
+            "Start with a research question.",
+            "Find relevant library documents.",
+            "Inspect evidence and metadata.",
+            "Build a grounded answer with sources.",
+        ),
+    ):
+        with column:
+            st.caption(number)
+            st.markdown(f"#### {title}")
+            st.write(description)
+
+    st.markdown("### Begin your research")
+    start_column, library_column = st.columns(2)
+    with start_column:
+        with st.container(border=True):
+            st.markdown("#### Research workspace")
+            st.write("Ask a question and review the answer with citations.")
+            st.page_link(RESEARCH_PAGE, label="Start researching", icon=":material/search:")
+    with library_column:
+        with st.container(border=True):
+            st.markdown("#### Library documents")
+            st.write("Search the academic collection before you ask.")
+            st.page_link(LIBRARY_PAGE, label="Browse documents", icon=":material/library_books:")
+
+
 def render_research_workspace() -> None:
-    """Render the research workspace and its backend response states."""
+    """Render the synthesis screen and its backend response states."""
     st.subheader("Research workspace")
+    st.caption("Synthesize evidence into a concise, citation-backed response.")
     st.caption(
         "Ask a question about the university library collection. "
         "The research assistant will return a grounded answer with sources."
@@ -141,7 +182,39 @@ def render_library_documents() -> None:
         "Search documents",
         placeholder="Search by title, author, subject, or document ID",
     )
+    filter_column, year_column = st.columns(2)
+    document_types = sorted(
+        {
+            document.metadata.document_type
+            for document in documents
+            if document.metadata.document_type
+        }
+    )
+    years = sorted(
+        {document.metadata.year for document in documents if document.metadata.year},
+        reverse=True,
+    )
+    with filter_column:
+        selected_type = st.selectbox(
+            "Document type",
+            ["All types", *document_types],
+        )
+    with year_column:
+        selected_year = st.selectbox("Year", ["All years", *years])
+
     results = search_library_documents(documents, query)
+    if selected_type != "All types":
+        results = [
+            document
+            for document in results
+            if document.metadata.document_type == selected_type
+        ]
+    if selected_year != "All years":
+        results = [
+            document
+            for document in results
+            if document.metadata.year == selected_year
+        ]
     st.caption(f"{len(results)} of {len(documents)} documents")
 
     if not results:
@@ -180,11 +253,50 @@ def render_document_card(library_document: LibraryDocument) -> None:
             "Use in research",
             key=f"use-{metadata.document_id}",
         ):
-            st.session_state["research_question"] = (
-                f"Help me research the document: {metadata.title or metadata.document_id}"
-            )
-            st.session_state["workspace_state"] = "idle"
-            st.info("Document selected. Continue in the Research workspace.")
+            st.session_state["selected_document"] = library_document
+            st.switch_page(INVESTIGATION_PAGE)
+
+
+def render_document_investigation() -> None:
+    """Provide the evidence-inspection screen defined by the product flow."""
+    st.subheader("Document investigation")
+    st.caption("Inspect a source before using it in your research synthesis.")
+
+    document = st.session_state.get("selected_document")
+    if document is None:
+        st.info("Select a document from Library documents to investigate it.")
+        st.page_link(LIBRARY_PAGE, label="Browse library documents", icon=":material/library_books:")
+        return
+
+    metadata = document.metadata
+    st.markdown(f"### {metadata.title or metadata.document_id}")
+    details = [
+        ("Document ID", metadata.document_id),
+        ("Author", metadata.author),
+        ("Type", metadata.document_type),
+        ("Year", str(metadata.year) if metadata.year else None),
+        ("Subject", metadata.subject),
+    ]
+    detail_columns = st.columns(2)
+    for index, (label, value) in enumerate(details):
+        with detail_columns[index % 2]:
+            st.caption(label)
+            st.write(value or "Not available")
+
+    st.markdown("### Relevant evidence")
+    if document.excerpt:
+        with st.container(border=True):
+            st.write(document.excerpt)
+    else:
+        st.info("No processed excerpt is available for this document.")
+
+    if metadata.source_url:
+        st.link_button("Open source", metadata.source_url)
+    st.page_link(
+        RESEARCH_PAGE,
+        label="Use this source in research",
+        icon=":material/arrow_forward:",
+    )
 
 
 def main() -> None:
@@ -195,22 +307,28 @@ def main() -> None:
         layout="wide",
     )
     st.title("University Library Research Assistant")
-    st.write(
-        "Find concise, citation-backed explanations grounded in university "
-        "library documents."
-    )
-
     page = st.navigation(
-        [
-            st.Page(render_research_workspace, title="Research workspace", icon=":material/search:"),
-            st.Page(
-                render_library_documents,
-                title="Library documents",
-                icon=":material/library_books:",
-            ),
-        ]
+        [HOME_PAGE, LIBRARY_PAGE, INVESTIGATION_PAGE, RESEARCH_PAGE]
     )
     page.run()
+
+
+HOME_PAGE = st.Page(render_landing, title="Home", icon=":material/home:")
+LIBRARY_PAGE = st.Page(
+    render_library_documents,
+    title="Library documents",
+    icon=":material/library_books:",
+)
+INVESTIGATION_PAGE = st.Page(
+    render_document_investigation,
+    title="Document investigation",
+    icon=":material/menu_book:",
+)
+RESEARCH_PAGE = st.Page(
+    render_research_workspace,
+    title="Research workspace",
+    icon=":material/search:",
+)
 
 
 if __name__ == "__main__":
