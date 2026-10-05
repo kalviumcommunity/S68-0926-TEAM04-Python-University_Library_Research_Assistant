@@ -40,3 +40,13 @@ def test_chat_returns_explicit_no_evidence_state() -> None:
         "answer": "No supporting evidence was found in the library documents.",
         "citations": [],
     }
+
+
+def test_chat_rejects_unrelated_multi_term_question() -> None:
+    response = client.post(
+        "/chat",
+        json={"question": "What is quantum teleportation?", "filters": {}},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["citations"] == []

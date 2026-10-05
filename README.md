@@ -1,7 +1,7 @@
 # S68-0926-TEAM04-Python-University_Library_Research_Assistant
 # University Library Research Assistant
 
-An AI-powered research assistant that helps university students find **concise, citation-backed answers** from research papers, theses, and course materials using **Retrieval-Augmented Generation (RAG)**.
+An academic library research assistant prototype that helps university students find **concise, citation-backed answers** from a small collection of research papers using traceable document ingestion and retrieval.
 
 ## Problem
 
@@ -9,7 +9,7 @@ University libraries contain large collections of academic documents, but studen
 
 ## Solution
 
-The system retrieves relevant academic content, generates a grounded answer using an LLM, and displays the supporting sources and citations alongside the response.
+The current system retrieves relevant academic content with deterministic lexical matching and displays the supporting sources and citations alongside the response. LLM generation, embeddings, and vector search are planned follow-up work.
 
 ### How It Works
 
@@ -24,22 +24,18 @@ RAG Retrieval
       ↓
 Relevant Academic Sources
       ↓
-LLM Grounded Generation
-      ↓
-Answer + Citations
+Answer Excerpt + Citations
 ```
 
 ## Key Features
 
-* 🔎 Semantic search across academic documents
-* 🤖 RAG-based grounded answers
+* 🔎 Search across processed academic documents
+* 🧭 Traceable page-level evidence
 * 📚 Research papers, theses, and course materials
 * 📌 Citation-backed responses
 * 🎯 Metadata-based filtering
 * 🚫 No-evidence/refusal handling
-* ⚡ Streaming responses
 * 📄 Source and document viewing
-* 📊 RAG evaluation and quality testing
 * 🔐 Environment-based secret management
 
 ## Tech Stack
@@ -53,12 +49,12 @@ Answer + Citations
 * Python
 * REST API
 
-**AI / RAG**
+**AI / RAG (current implementation)**
 
-* Embeddings
-* Vector Database
-* LLM
-* Semantic Retrieval
+* PyMuPDF extraction
+* Cleaning and metadata
+* Configurable chunking
+* Deterministic lexical retrieval
 
 **Data & Testing**
 
@@ -122,8 +118,8 @@ Detailed project documentation is available in:
 * `docs/PRD.md` — Product requirements
 * `docs/ARCHITECTURE.md` — System architecture
 * `docs/RAG_DESIGN.md` — RAG design
-* `docs/API_CONTRACT.md` — Backend/API contract
-* `docs/EVALUATION.md` — RAG evaluation strategy
+* `API_CONTRACT.md` — Backend/API contract
+* `docs/EVALUATION.md` — Planned RAG evaluation strategy
 * `docs/CONTRIBUTING.md` — Development workflow
 
 ## Project Goal
@@ -131,3 +127,33 @@ Detailed project documentation is available in:
 > **Ask → Retrieve → Explain → Cite**
 
 The goal is to make academic research faster, clearer, and more reliable while ensuring that answers remain grounded in the university's available sources.
+
+## Run locally
+
+From the repository root, install dependencies and process the PDFs:
+
+```powershell
+python -m pip install -r requirements.txt
+python -m scripts.process_documents
+```
+
+Start the backend in one terminal:
+
+```powershell
+python -m uvicorn Backend.main:app --host 127.0.0.1 --port 8000
+```
+
+Start Streamlit in a second terminal:
+
+```powershell
+python -m streamlit run frontend/app.py --server.address 127.0.0.1 --server.port 8510
+```
+
+Open `http://127.0.0.1:8510`. Run the tests with `python -m pytest -q`.
+
+## Current limitations
+
+Embeddings, ChromaDB, semantic vector retrieval, LLM generation, streaming, and
+formal RAG evaluation are not implemented in this prototype. The backend uses
+the processed JSONL chunks and deterministic lexical matching so that the
+end-to-end ingestion, citation, and frontend flow can be demonstrated honestly.

@@ -11,6 +11,18 @@ from frontend.utils.library import (
 )
 
 
+def clear_research_state() -> None:
+    """Clear the active question, answer, citations, and errors."""
+    for key in (
+        "research_question",
+        "research_response",
+        "workspace_error",
+        "workspace_state",
+        "last_request",
+    ):
+        st.session_state.pop(key, None)
+
+
 def render_landing() -> None:
     """Introduce the product and expose the two primary entry points."""
     st.header("Research smarter with your library")
@@ -85,10 +97,13 @@ def render_research_workspace() -> None:
                 question.strip()
             )
             try:
-                st.session_state["research_response"] = ask_research_backend(
+                response = ask_research_backend(
                     question.strip()
                 )
-                st.session_state["workspace_state"] = "answer"
+                st.session_state["research_response"] = response
+                st.session_state["workspace_state"] = (
+                    "no_evidence" if not response["citations"] else "answer"
+                )
             except BackendRequestError as error:
                 st.session_state["workspace_error"] = str(error)
                 st.session_state["workspace_state"] = "error"
@@ -107,8 +122,10 @@ def render_research_workspace() -> None:
             state = st.session_state.get("workspace_state")
             if state == "error":
                 st.error(st.session_state["workspace_error"])
-            elif state == "answer":
+            elif state in {"answer", "no_evidence"}:
                 st.write(st.session_state["research_response"]["answer"])
+                if state == "no_evidence":
+                    st.warning("No supporting evidence was found in the library collection.")
             elif state == "loading":
                 st.info("Preparing your grounded answer...")
             else:
@@ -117,14 +134,38 @@ def render_research_workspace() -> None:
     with sources_column:
         st.markdown("### SOURCES / CITATIONS")
         with st.container(border=True):
-            if st.session_state.get("workspace_state") == "answer":
+            if st.session_state.get("workspace_state") in {"answer", "no_evidence"}:
                 citations = st.session_state["research_response"]["citations"]
                 if citations:
-                    for citation in citations:
+                    for index, citation in enumerate(citations, start=1):
                         title = citation.get("title") or citation.get("document_id")
                         page = citation.get("page")
-                        page_label = f" — page {page}" if page else ""
-                        st.markdown(f"- **{title}**{page_label}")
+                        metadata = citation.get("metadata", {})
+                        with st.container(border=True):
+                            st.markdown(f"**[{index}] {title}**")
+                            details = [
+                                metadata.get("author"),
+                                (
+                                    f"Page {page}"
+                                    if page is not None
+                                    else None
+                                ),
+                                metadata.get("document_type"),
+                                str(metadata.get("year"))
+                                if metadata.get("year")
+                                else None,
+                            ]
+                            details = [detail for detail in details if detail]
+                            if details:
+                                st.caption(" · ".join(details))
+                            if metadata.get("subject"):
+                                st.caption(f"Subject: {metadata['subject']}")
+                            if metadata.get("source_url"):
+                                st.link_button(
+                                    "Open source",
+                                    metadata["source_url"],
+                                    key=f"citation-source-{index}",
+                                )
                 else:
                     st.info("No citations were returned for this question.")
             else:
@@ -150,13 +191,20 @@ def render_research_workspace() -> None:
         st.session_state.pop("workspace_error", None)
         with st.spinner("Preparing your follow-up..."):
             try:
-                st.session_state["research_response"] = ask_research_backend(
+                response = ask_research_backend(
                     follow_up.strip()
                 )
-                st.session_state["workspace_state"] = "answer"
+                st.session_state["research_response"] = response
+                st.session_state["workspace_state"] = (
+                    "no_evidence" if not response["citations"] else "answer"
+                )
             except BackendRequestError as error:
                 st.session_state["workspace_error"] = str(error)
                 st.session_state["workspace_state"] = "error"
+
+    if st.button("Clear research", type="secondary"):
+        clear_research_state()
+        st.rerun()
 
 
 @st.cache_data
@@ -181,6 +229,7 @@ def render_library_documents() -> None:
     query = st.text_input(
         "Search documents",
         placeholder="Search by title, author, subject, or document ID",
+        key="library_query",
     )
     filter_column, year_column = st.columns(2)
     document_types = sorted(
@@ -198,9 +247,18 @@ def render_library_documents() -> None:
         selected_type = st.selectbox(
             "Document type",
             ["All types", *document_types],
+            key="library_document_type",
         )
     with year_column:
-        selected_year = st.selectbox("Year", ["All years", *years])
+        selected_year = st.selectbox(
+            "Year",
+            ["All years", *years],
+            key="library_year",
+        )
+    if st.button("Reset document filters"):
+        for key in ("library_query", "library_document_type", "library_year"):
+            st.session_state.pop(key, None)
+        st.rerun()
 
     results = search_library_documents(documents, query)
     if selected_type != "All types":
@@ -292,6 +350,11 @@ def render_document_investigation() -> None:
 
     if metadata.source_url:
         st.link_button("Open source", metadata.source_url)
+    st.page_link(
+        LIBRARY_PAGE,
+        label="Back to library documents",
+        icon=":material/arrow_back:",
+    )
     st.page_link(
         RESEARCH_PAGE,
         label="Use this source in research",
