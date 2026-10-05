@@ -32,6 +32,7 @@ def chat(request: ChatRequest):
                     "document_id": chunk["document_id"],
                     "title": chunk["metadata"].get("title")
                     or chunk["document_id"],
+                    "excerpt": chunk.get("text"),
                     "page": chunk.get("page"),
                     "section": chunk.get("section"),
                     "metadata": chunk["metadata"],

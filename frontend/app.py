@@ -160,6 +160,8 @@ def render_research_workspace() -> None:
                                 st.caption(" · ".join(details))
                             if metadata.get("subject"):
                                 st.caption(f"Subject: {metadata['subject']}")
+                            if citation.get("excerpt"):
+                                st.write(citation["excerpt"])
                             if metadata.get("source_url"):
                                 st.link_button(
                                     "Open source",
