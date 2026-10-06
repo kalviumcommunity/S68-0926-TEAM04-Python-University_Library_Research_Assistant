@@ -51,3 +51,21 @@ def test_chat_rejects_unrelated_multi_term_question() -> None:
 
     assert response.status_code == 200
     assert response.json()["citations"] == []
+
+
+def test_chat_can_question_one_selected_document() -> None:
+    response = client.post(
+        "/chat",
+        json={
+            "question": "What is the main contribution of this paper?",
+            "filters": {"document_id": "rag_survey.pdf"},
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["has_evidence"] is True
+    assert body["citations"]
+    assert {
+        citation["document_id"] for citation in body["citations"]
+    } == {"rag_survey.pdf"}

@@ -23,6 +23,39 @@ def clear_research_state() -> None:
         st.session_state.pop(key, None)
 
 
+def render_citation(citation: dict, index: int, key_prefix: str = "citation") -> None:
+    """Render one citation while omitting unavailable optional fields."""
+    title = citation.get("title") or citation.get("document_id") or "Library source"
+    page = citation.get("page")
+    metadata = citation.get("metadata") or {}
+    with st.container(border=True):
+        st.markdown(f"**[{index}] {title}**")
+        details = [
+            citation.get("author") or metadata.get("author"),
+            f"Page {page}" if page is not None else None,
+            metadata.get("document_type"),
+            str(metadata.get("year")) if metadata.get("year") else None,
+        ]
+        details = [detail for detail in details if detail]
+        if details:
+            st.caption(" · ".join(details))
+        if metadata.get("subject"):
+            st.caption(f"Subject: {metadata['subject']}")
+        if citation.get("excerpt"):
+            st.write(citation["excerpt"])
+        if citation.get("chunk_id"):
+            score = citation.get("score")
+            score_text = (
+                f" · Similarity {score:.2f}"
+                if isinstance(score, (int, float))
+                else ""
+            )
+            st.caption(f"Evidence chunk: {citation['chunk_id']}{score_text}")
+        source_url = citation.get("source_url") or metadata.get("source_url")
+        if source_url:
+            st.link_button("Open source", source_url, key=f"{key_prefix}-source-{index}")
+
+
 def render_landing() -> None:
     """Introduce the product and expose the two primary entry points."""
     st.header("Research smarter with your library")
@@ -169,49 +202,7 @@ def render_research_workspace() -> None:
                 citations = st.session_state["research_response"]["citations"]
                 if citations:
                     for index, citation in enumerate(citations, start=1):
-                        title = citation.get("title") or citation.get("document_id")
-                        page = citation.get("page")
-                        metadata = citation.get("metadata") or {}
-                        with st.container(border=True):
-                            st.markdown(f"**[{index}] {title}**")
-                            details = [
-                                citation.get("author") or metadata.get("author"),
-                                (
-                                    f"Page {page}"
-                                    if page is not None
-                                    else None
-                                ),
-                                metadata.get("document_type"),
-                                str(metadata.get("year"))
-                                if metadata.get("year")
-                                else None,
-                            ]
-                            details = [detail for detail in details if detail]
-                            if details:
-                                st.caption(" · ".join(details))
-                            if metadata.get("subject"):
-                                st.caption(f"Subject: {metadata['subject']}")
-                            if citation.get("excerpt"):
-                                st.write(citation["excerpt"])
-                            if citation.get("chunk_id"):
-                                score = citation.get("score")
-                                score_text = (
-                                    f" · Similarity {score:.2f}"
-                                    if isinstance(score, (int, float))
-                                    else ""
-                                )
-                                st.caption(
-                                    f"Evidence chunk: {citation['chunk_id']}{score_text}"
-                                )
-                            source_url = citation.get("source_url") or metadata.get(
-                                "source_url"
-                            )
-                            if source_url:
-                                st.link_button(
-                                    "Open source",
-                                    source_url,
-                                    key=f"citation-source-{index}",
-                                )
+                        render_citation(citation, index)
                 else:
                     st.info("No citations were returned for this question.")
             else:
@@ -361,6 +352,9 @@ def render_document_card(library_document: LibraryDocument) -> None:
             key=f"use-{metadata.document_id}",
         ):
             st.session_state["selected_document"] = library_document
+            st.session_state.pop("investigation_response", None)
+            st.session_state.pop("investigation_question", None)
+            st.session_state.pop("investigation_error", None)
             st.switch_page(INVESTIGATION_PAGE)
 
 
@@ -414,6 +408,54 @@ def render_document_investigation() -> None:
             st.write(document.excerpt)
     else:
         st.info("No processed excerpt is available for this document.")
+
+    st.markdown("### ASK ABOUT THIS DOCUMENT")
+    st.caption(
+        "Questions asked here are restricted to this selected document. "
+        "Answers are returned with evidence from this source only."
+    )
+    with st.form(f"document_question_form_{metadata.document_id}"):
+        document_question = st.text_area(
+            "Your question",
+            placeholder="What is the main contribution of this paper?",
+            height=100,
+        )
+        ask_document = st.form_submit_button("Ask about this document", type="primary")
+
+    if ask_document:
+        if not document_question.strip():
+            st.warning("Enter a question about this document.")
+        else:
+            with st.spinner("Searching this document's evidence..."):
+                try:
+                    response = ask_research_backend(
+                        document_question.strip(),
+                        {"document_id": metadata.document_id},
+                    )
+                    st.session_state["investigation_response"] = response
+                    st.session_state["investigation_question"] = document_question.strip()
+                except BackendRequestError as error:
+                    st.session_state["investigation_error"] = str(error)
+
+    if st.session_state.get("investigation_question"):
+        st.markdown("### DOCUMENT ANSWER")
+        st.caption(st.session_state["investigation_question"])
+        if st.session_state.get("investigation_error"):
+            st.error(st.session_state["investigation_error"])
+        else:
+            investigation_response = st.session_state.get(
+                "investigation_response", {}
+            )
+            st.write(investigation_response.get("answer", "No answer returned."))
+            citations = investigation_response.get("citations", [])
+            if citations:
+                st.markdown("#### Supporting evidence")
+                for index, citation in enumerate(citations, start=1):
+                    render_citation(citation, index, "investigation")
+            else:
+                st.warning(
+                    "No supporting evidence was found in this document for that question."
+                )
 
     if metadata.source_url:
         st.link_button("Open source", metadata.source_url)

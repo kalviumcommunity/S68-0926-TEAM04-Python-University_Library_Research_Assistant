@@ -1,3 +1,5 @@
+import re
+
 from fastapi import APIRouter, HTTPException, status
 
 from Backend.schemas.chat import ChatRequest, ChatResponse
@@ -9,6 +11,22 @@ from Backend.services.rag_service import (
 router = APIRouter()
 
 rag_service = RAGService()
+
+
+def _answer_from_evidence(evidence: list[dict]) -> str:
+    """Prefer explanatory prose over bibliography-like retrieved chunks."""
+    def quality(chunk: dict) -> tuple[int, float]:
+        text = chunk.get("text", "")
+        reference_count = len(re.findall(r"\[\d+\]", text))
+        starts_like_references = int(
+            text.lower().lstrip().startswith(("references", "bibliography"))
+        )
+        return (
+            reference_count + (starts_like_references * 10),
+            -float(chunk.get("score", 0.0)),
+        )
+
+    return min(evidence, key=quality)["text"]
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -27,7 +45,7 @@ def chat(request: ChatRequest):
             )
 
         return ChatResponse(
-            answer=evidence[0]["text"],
+            answer=_answer_from_evidence(evidence),
             citations=[
                 {
                     "citation_id": index,

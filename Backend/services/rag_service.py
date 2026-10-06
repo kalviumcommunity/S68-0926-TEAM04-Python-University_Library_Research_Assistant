@@ -33,8 +33,11 @@ class RAGService:
             chunks = self.store.search(query_embedding, top_k, filters)
         except (RuntimeError, ValueError, OSError, KeyError) as exc:
             raise RAGServiceUnavailable(str(exc)) from exc
+        threshold = self.similarity_threshold
+        if filters and filters.get("document_id"):
+            threshold = min(threshold, 0.2)
         return [
             chunk.as_dict()
             for chunk in chunks
-            if chunk.score >= self.similarity_threshold
+            if chunk.score >= threshold
         ]
