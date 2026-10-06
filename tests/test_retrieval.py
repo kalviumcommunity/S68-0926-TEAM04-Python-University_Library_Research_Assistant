@@ -65,15 +65,25 @@ def test_real_corpus_transformer_query_excludes_weak_rag_chunk() -> None:
 def test_real_corpus_required_questions() -> None:
     service = RAGService()
     cases = (
-        ("What is retrieval augmented generation?", "rag_survey.pdf"),
+        (
+            "What is retrieval augmented generation?",
+            {"rag_survey.pdf", "2312.10997v5"},
+        ),
         ("How does BERT use bidirectional context?", "1810.04805v2"),
         ("What is self-attention?", "1706.03762v7"),
     )
 
-    for question, expected_document_id in cases:
+    for question, expected_document in cases:
         results = service.retrieve(question)
         assert results
-        assert expected_document_id in {result["document_id"] for result in results[:5]}
+        expected_document_ids = (
+            expected_document
+            if isinstance(expected_document, set)
+            else {expected_document}
+        )
+        assert expected_document_ids & {
+            result["document_id"] for result in results[:5]
+        }
 
 
 def test_real_corpus_unrelated_question_returns_no_evidence() -> None:

@@ -47,6 +47,10 @@ class RAGService:
             for chunk in chunks
             if chunk.score >= threshold and not _looks_like_references(chunk.text)
         ]
+        meaningful_chunks.sort(
+            key=lambda chunk: _question_aware_score(question, chunk),
+            reverse=True,
+        )
         return [chunk.as_dict() for chunk in meaningful_chunks[:top_k]]
 
 
@@ -59,3 +63,40 @@ def _looks_like_references(text: str) -> bool:
         or citation_count >= 4
         or normalized.count("arxiv preprint") >= 2
     )
+
+
+_DEFINITION_RE = re.compile(
+    r"\bwhat\s+(?:is|are)|\bwhat\s+does\b|\bdefine\b|\bmeaning\s+of\b",
+    re.IGNORECASE,
+)
+_DEFINITION_CUES = (
+    " is a ",
+    " is an ",
+    " refers to ",
+    " called ",
+    " designed to ",
+    " we introduce ",
+    " we propose ",
+    " we present ",
+    " consists of ",
+)
+_INCIDENTAL_CUES = (
+    "table ",
+    "appendix",
+    "ablation",
+    "implementation details",
+    "results are presented",
+    "hyperparameter",
+)
+
+
+def _question_aware_score(question: str, chunk: RetrievedChunk) -> float:
+    """Rerank semantic candidates using generic question intent and text quality."""
+    score = chunk.score
+    if not _DEFINITION_RE.search(question):
+        return score
+
+    text = f" {chunk.text.lower()} "
+    cue_count = sum(cue in text for cue in _DEFINITION_CUES)
+    incidental_count = sum(cue in text for cue in _INCIDENTAL_CUES)
+    return score + cue_count * 0.08 - incidental_count * 0.06
