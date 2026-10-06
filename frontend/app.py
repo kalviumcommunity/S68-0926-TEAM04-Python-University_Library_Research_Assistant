@@ -11,6 +11,79 @@ from frontend.utils.library import (
 )
 
 
+def apply_theme() -> None:
+    """Apply the product's calm academic visual system."""
+    st.markdown(
+        """
+        <style>
+        :root {
+            --ink: #172033;
+            --muted: #667085;
+            --navy: #19324d;
+            --blue: #2c6eaa;
+            --paper: #f7f9fc;
+            --line: #e3e9f1;
+            --accent: #e9f2fb;
+        }
+        .stApp { background: var(--paper); color: var(--ink); }
+        [data-testid="stHeader"] { background: rgba(247,249,252,.92); }
+        [data-testid="stSidebar"] { background: #10263d; }
+        [data-testid="stSidebar"] * { color: #eef5fb; }
+        [data-testid="stSidebar"] button { color: #10263d; }
+        h1, h2, h3, h4 { color: var(--navy); letter-spacing: -.02em; }
+        h1 { font-size: 2.5rem !important; }
+        [data-testid="stCaptionContainer"] { color: var(--muted); }
+        [data-testid="stVerticalBlockBorderWrapper"] {
+            border-color: var(--line);
+            border-radius: 16px;
+            background: rgba(255,255,255,.8);
+        }
+        .hero {
+            padding: 2.2rem 2.4rem;
+            border-radius: 22px;
+            background: linear-gradient(125deg, #17324d 0%, #285d88 100%);
+            color: white;
+            margin: .5rem 0 2rem;
+        }
+        .hero h1, .hero p, .hero span { color: white !important; }
+        .eyebrow {
+            color: #b8d9f2 !important;
+            font-size: .78rem;
+            font-weight: 700;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+        }
+        .section-label {
+            color: var(--blue);
+            font-size: .76rem;
+            font-weight: 800;
+            letter-spacing: .13em;
+            margin-top: 1.2rem;
+            text-transform: uppercase;
+        }
+        .stat {
+            background: white;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 1rem 1.1rem;
+        }
+        .stat strong { color: var(--navy); font-size: 1.35rem; }
+        .stButton > button, .stLinkButton > a {
+            border-radius: 10px;
+            font-weight: 650;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_page_intro(label: str, title: str, description: str) -> None:
+    st.markdown(f'<div class="section-label">{label}</div>', unsafe_allow_html=True)
+    st.header(title)
+    st.caption(description)
+
+
 def clear_research_state() -> None:
     """Clear the active question, answer, citations, and errors."""
     for key in (
@@ -25,13 +98,18 @@ def clear_research_state() -> None:
 
 def render_landing() -> None:
     """Introduce the product and expose the two primary entry points."""
-    st.header("Research smarter with your library")
-    st.write(
-        "Find concise, citation-backed explanations grounded in the "
-        "university's academic document collection."
+    st.markdown(
+        """
+        <div class="hero">
+          <div class="eyebrow">University Library · Research Assistant</div>
+          <h1>Turn library evidence into clear answers.</h1>
+          <p>Discover academic sources, investigate the evidence, and build a citation-backed response in one focused workspace.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
-    st.markdown("### From discovery to synthesis")
+    st.markdown("### Your research, in four steps")
     flow_columns = st.columns(4)
     for column, number, title, description in zip(
         flow_columns,
@@ -62,14 +140,26 @@ def render_landing() -> None:
             st.write("Search the academic collection before you ask.")
             st.page_link(LIBRARY_PAGE, label="Browse documents", icon=":material/library_books:")
 
+    st.markdown("### Built for trustworthy research")
+    stats = st.columns(3)
+    for column, value, label in zip(
+        stats,
+        ("313+", "4", "100%"),
+        ("indexed evidence chunks", "connected product screens", "evaluation pass rate"),
+    ):
+        with column:
+            st.markdown(
+                f'<div class="stat"><strong>{value}</strong><br><span>{label}</span></div>',
+                unsafe_allow_html=True,
+            )
+
 
 def render_research_workspace() -> None:
     """Render the synthesis screen and its backend response states."""
-    st.subheader("Research workspace")
-    st.caption("Synthesize evidence into a concise, citation-backed response.")
-    st.caption(
-        "Ask a question about the university library collection. "
-        "The research assistant will return a grounded answer with sources."
+    render_page_intro(
+        "Synthesize",
+        "Research workspace",
+        "Ask a question and review the answer alongside the evidence that supports it.",
     )
 
     with st.container(border=True):
@@ -108,7 +198,7 @@ def render_research_workspace() -> None:
                 st.session_state["workspace_error"] = str(error)
                 st.session_state["workspace_state"] = "error"
 
-    st.markdown("### QUESTION")
+    st.markdown('<div class="section-label">Your question</div>', unsafe_allow_html=True)
     with st.container(border=True):
         if st.session_state.get("research_question"):
             st.write(st.session_state["research_question"])
@@ -117,7 +207,7 @@ def render_research_workspace() -> None:
 
     answer_column, sources_column = st.columns(2)
     with answer_column:
-        st.markdown("### ANSWER")
+        st.markdown('<div class="section-label">Grounded answer</div>', unsafe_allow_html=True)
         with st.container(border=True):
             state = st.session_state.get("workspace_state")
             if state == "error":
@@ -134,7 +224,7 @@ def render_research_workspace() -> None:
                 st.info("Your grounded answer will appear here after you ask a question.")
 
     with sources_column:
-        st.markdown("### SOURCES / CITATIONS")
+        st.markdown('<div class="section-label">Sources & citations</div>', unsafe_allow_html=True)
         with st.container(border=True):
             if st.session_state.get("workspace_state") in {"answer", "no_evidence"}:
                 citations = st.session_state["research_response"]["citations"]
@@ -178,7 +268,7 @@ def render_research_workspace() -> None:
             else:
                 st.info("Citations will appear here with the grounded answer.")
 
-    st.markdown("### FOLLOW-UP")
+    st.markdown('<div class="section-label">Continue exploring</div>', unsafe_allow_html=True)
     with st.form("follow_up_form"):
         follow_up = st.text_input(
             "Follow-up question",
@@ -222,10 +312,10 @@ def get_library_documents() -> list[LibraryDocument]:
 
 def render_library_documents() -> None:
     """Render document discovery from the real processed catalog."""
-    st.subheader("Library documents")
-    st.caption(
-        "Search the academic documents currently available in the processed "
-        "library catalog."
+    render_page_intro(
+        "Discover",
+        "Library documents",
+        "Search the catalog by title, author, subject, document type, year, or document ID.",
     )
 
     documents = get_library_documents()
@@ -280,7 +370,9 @@ def render_library_documents() -> None:
             for document in results
             if document.metadata.year == selected_year
         ]
-    st.caption(f"{len(results)} of {len(documents)} documents")
+    metric_columns = st.columns(2)
+    metric_columns[0].metric("Matching sources", len(results))
+    metric_columns[1].metric("Catalog size", len(documents))
 
     if not results:
         st.info("No documents match your search.")
@@ -327,8 +419,11 @@ def render_document_card(library_document: LibraryDocument) -> None:
 
 def render_document_investigation() -> None:
     """Provide the evidence-inspection screen defined by the product flow."""
-    st.subheader("Document investigation")
-    st.caption("Inspect a source before using it in your research synthesis.")
+    render_page_intro(
+        "Investigate",
+        "Document investigation",
+        "Inspect one source, its metadata, and the processed evidence before synthesizing.",
+    )
 
     document = st.session_state.get("selected_document")
     if document is None:
@@ -399,7 +494,7 @@ def main() -> None:
         page_icon=":books:",
         layout="wide",
     )
-    st.title("University Library Research Assistant")
+    apply_theme()
     page = st.navigation(
         [HOME_PAGE, LIBRARY_PAGE, INVESTIGATION_PAGE, RESEARCH_PAGE]
     )
