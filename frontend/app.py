@@ -125,7 +125,9 @@ def render_research_workspace() -> None:
             elif state in {"answer", "no_evidence"}:
                 st.write(st.session_state["research_response"]["answer"])
                 if state == "no_evidence":
-                    st.warning("No supporting evidence was found in the library collection.")
+                    st.warning(
+                        "No supporting evidence was found in the library documents."
+                    )
             elif state == "loading":
                 st.info("Preparing your grounded answer...")
             else:
@@ -140,11 +142,11 @@ def render_research_workspace() -> None:
                     for index, citation in enumerate(citations, start=1):
                         title = citation.get("title") or citation.get("document_id")
                         page = citation.get("page")
-                        metadata = citation.get("metadata", {})
+                        metadata = citation.get("metadata") or {}
                         with st.container(border=True):
                             st.markdown(f"**[{index}] {title}**")
                             details = [
-                                metadata.get("author"),
+                                citation.get("author") or metadata.get("author"),
                                 (
                                     f"Page {page}"
                                     if page is not None
@@ -162,10 +164,13 @@ def render_research_workspace() -> None:
                                 st.caption(f"Subject: {metadata['subject']}")
                             if citation.get("excerpt"):
                                 st.write(citation["excerpt"])
-                            if metadata.get("source_url"):
+                            source_url = citation.get("source_url") or metadata.get(
+                                "source_url"
+                            )
+                            if source_url:
                                 st.link_button(
                                     "Open source",
-                                    metadata["source_url"],
+                                    source_url,
                                     key=f"citation-source-{index}",
                                 )
                 else:
@@ -304,8 +309,9 @@ def render_document_card(library_document: LibraryDocument) -> None:
             st.caption(" · ".join(details))
         if library_document.excerpt:
             st.write(library_document.excerpt[:500].rstrip() + "...")
-            if library_document.page is not None:
-                st.caption(f"Preview evidence: page {library_document.page}")
+            preview_page = getattr(library_document, "page", None)
+            if preview_page is not None:
+                st.caption(f"Preview evidence: page {preview_page}")
         else:
             st.caption("No processed text excerpt is available.")
 
@@ -360,10 +366,12 @@ def render_document_investigation() -> None:
     st.markdown("### RELEVANT EVIDENCE")
     if document.excerpt:
         with st.container(border=True):
-            if document.page is not None:
-                st.caption(f"Page {document.page}")
-            if document.chunk_id:
-                st.caption(f"Evidence chunk: {document.chunk_id}")
+            evidence_page = getattr(document, "page", None)
+            evidence_chunk_id = getattr(document, "chunk_id", None)
+            if evidence_page is not None:
+                st.caption(f"Page {evidence_page}")
+            if evidence_chunk_id:
+                st.caption(f"Evidence chunk: {evidence_chunk_id}")
             st.write(document.excerpt)
     else:
         st.info("No processed excerpt is available for this document.")
