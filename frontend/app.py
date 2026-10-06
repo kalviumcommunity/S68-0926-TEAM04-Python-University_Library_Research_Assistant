@@ -169,7 +169,8 @@ def inject_figma_theme() -> None:
             border-radius: 8px;
             padding: 0.8rem;
         }
-        .fig-topbar {
+        .fig-topbar,
+        [class*="st-key-fig-topbar"] {
             align-items: center;
             background: white;
             border: 1px solid var(--line);
@@ -182,6 +183,22 @@ def inject_figma_theme() -> None:
             margin: -0.4rem 0 0.8rem;
             min-height: 2rem;
             padding: 0.25rem 0.55rem;
+        }
+        [class*="st-key-fig-topbar"] [data-testid="stForm"] {
+            border: 0;
+            padding: 0;
+        }
+        [class*="st-key-fig-topbar"] [data-testid="stTextInput"] {
+            margin: -0.4rem 0;
+        }
+        [class*="st-key-fig-topbar"] [data-testid="stTextInput"] input {
+            font-size: 0.68rem;
+            min-height: 1.8rem;
+        }
+        [class*="st-key-fig-topbar"] [data-testid="stFormSubmitButton"] button {
+            font-size: 0.62rem;
+            min-height: 1.8rem;
+            padding: 0 0.45rem;
         }
         .fig-brand { color: var(--navy); font-size: 0.69rem; font-weight: 800; }
         .fig-brand small { color: var(--muted); display: block; font-size: 0.45rem; letter-spacing: 0.06em; }
@@ -243,17 +260,41 @@ def inject_figma_theme() -> None:
 
 def render_topbar() -> None:
     """Render the compact utility bar used by the reference screens."""
-    st.html(
-        """
-        <div class="fig-topbar">
-          <div class="fig-brand">Library Assistant<small>UNIVERSITY KNOWLEDGE CORE</small></div>
-          <span>Corpus</span><span>Workspace in use</span>
-          <span class="fig-chip">Term: Spring 2025 · 142k cataloged papers</span>
-          <span class="fig-muted">Search catalog, DOI, or citations...</span>
-          <span class="fig-chip">Index Online</span>
-        </div>
-        """
-    )
+    with st.container(key="fig-topbar"):
+        brand_column, corpus_column, workspace_column, term_column, search_column, status_column = st.columns(
+            [1.35, 0.55, 0.8, 1.35, 2.1, 0.75],
+            vertical_alignment="center",
+        )
+        with brand_column:
+            st.markdown(
+                '<div class="fig-brand">Library Assistant<small>UNIVERSITY KNOWLEDGE CORE</small></div>',
+                unsafe_allow_html=True,
+            )
+        with corpus_column:
+            st.caption("Corpus")
+        with workspace_column:
+            st.caption("Workspace in use")
+        with term_column:
+            st.markdown(
+                '<span class="fig-chip">Term: Spring 2025 · 142k cataloged papers</span>',
+                unsafe_allow_html=True,
+            )
+        with search_column:
+            with st.form("catalog_search_form", border=False):
+                catalog_query = st.text_input(
+                    "Catalog search",
+                    placeholder="Search catalog, DOI, or citations...",
+                    label_visibility="collapsed",
+                )
+                catalog_submitted = st.form_submit_button("Search")
+            if catalog_submitted:
+                st.session_state["library_query"] = catalog_query.strip()
+                st.switch_page(LIBRARY_PAGE)
+        with status_column:
+            st.markdown(
+                '<span class="fig-chip">Index Online</span>',
+                unsafe_allow_html=True,
+            )
 
 
 def clear_research_state() -> None:
