@@ -143,25 +143,87 @@ def inject_figma_theme() -> None:
         }
         [data-testid="stButton"] button,
         [data-testid="stPageLink"] a,
-        [data-testid="stLinkButton"] a {
+        [data-testid="stLinkButton"] a,
+        [data-testid="stBaseButton-primary"],
+        [data-testid="stBaseButton-secondary"],
+        [data-testid="stBaseButton-secondaryFormSubmit"],
+        [data-testid="stBaseButton-primaryFormSubmit"] {
             border-radius: 5px;
             font-weight: 600;
         }
-        [data-testid="stButton"] button[kind="primary"] {
+        [data-testid="stButton"] button[kind="primary"],
+        [data-testid="stBaseButton-primary"],
+        [data-testid="stBaseButton-primaryFormSubmit"] {
             background: var(--navy);
             border-color: var(--navy);
-            color: white;
+            color: #ffffff !important;
         }
-        [data-testid="stButton"] button[kind="primary"]:hover {
+        [data-testid="stButton"] button[kind="primary"]:hover,
+        [data-testid="stBaseButton-primary"]:hover,
+        [data-testid="stBaseButton-primaryFormSubmit"]:hover {
             background: var(--navy-dark);
             border-color: var(--navy-dark);
+        }
+        [data-testid="stBaseButton-primary"] *,
+        [data-testid="stBaseButton-primaryFormSubmit"] *,
+        [data-testid="stBaseButton-secondary"] *,
+        [data-testid="stBaseButton-secondaryFormSubmit"] * {
+            color: inherit !important;
+        }
+        [data-testid="stButton"] button[kind="secondary"],
+        [data-testid="stBaseButton-secondary"],
+        [data-testid="stBaseButton-secondaryFormSubmit"] {
+            background: #ffffff;
+            border: 1px solid #9eadd0;
+            color: var(--navy) !important;
+        }
+        [data-testid="stButton"] button[kind="secondary"]:hover,
+        [data-testid="stBaseButton-secondary"]:hover,
+        [data-testid="stBaseButton-secondaryFormSubmit"]:hover {
+            background: #eef2ff;
+            border-color: var(--navy);
+            color: var(--navy-dark) !important;
+        }
+        [data-testid="stPageLink"] a,
+        [data-testid="stLinkButton"] a {
+            background: #ffffff;
+            border: 1px solid #9eadd0;
+            color: var(--navy) !important;
+        }
+        [data-testid="stPageLink"] a:hover,
+        [data-testid="stLinkButton"] a:hover {
+            background: #eef2ff;
+            border-color: var(--navy);
+            color: var(--navy-dark) !important;
+        }
+        [data-testid="stPageLink"] a *,
+        [data-testid="stLinkButton"] a * {
+            color: inherit !important;
         }
         [data-testid="stTextInput"] input,
         [data-testid="stTextArea"] textarea,
         [data-testid="stSelectbox"] div[data-baseweb="select"] > div {
             border-color: var(--line);
             border-radius: 5px;
-            background: white;
+            background: #ffffff;
+            color: #18264a !important;
+            caret-color: #18264a;
+        }
+        [data-testid="stTextInput"] input::placeholder,
+        [data-testid="stTextArea"] textarea::placeholder {
+            color: #65708c !important;
+            opacity: 1;
+        }
+        [data-testid="stSelectbox"] [data-baseweb="select"] *,
+        [data-testid="stTextInput"] input,
+        [data-testid="stTextArea"] textarea {
+            color: #18264a !important;
+        }
+        [data-testid="stTextInput"] input:focus,
+        [data-testid="stTextArea"] textarea:focus,
+        [data-testid="stSelectbox"] div[data-baseweb="select"] > div:focus-within {
+            border-color: var(--navy);
+            box-shadow: 0 0 0 1px var(--navy);
         }
         [data-testid="stMetric"] {
             background: white;
@@ -199,6 +261,11 @@ def inject_figma_theme() -> None:
             font-size: 0.62rem;
             min-height: 1.8rem;
             padding: 0 0.45rem;
+        }
+        [class*="st-key-fig-topbar"] [data-testid="stBaseButton-secondaryFormSubmit"] {
+            background: var(--navy);
+            border-color: var(--navy);
+            color: #ffffff !important;
         }
         .fig-brand { color: var(--navy); font-size: 0.69rem; font-weight: 800; }
         .fig-brand small { color: var(--muted); display: block; font-size: 0.45rem; letter-spacing: 0.06em; }
