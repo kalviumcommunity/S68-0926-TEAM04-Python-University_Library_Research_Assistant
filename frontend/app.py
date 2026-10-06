@@ -101,7 +101,45 @@ def inject_figma_theme() -> None:
             border-color: var(--line);
             border-radius: 10px;
             background: var(--panel);
-            box-shadow: 0 8px 26px rgba(25, 59, 145, 0.05);
+            box-shadow: 0 8px 26px rgba(25, 59, 145, 0.07);
+            transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+        }
+        [data-testid="stVerticalBlockBorderWrapper"]:hover {
+            border-color: #b9c9ee;
+            box-shadow: 0 12px 30px rgba(25, 59, 145, 0.12);
+            transform: translateY(-2px);
+        }
+        [class*="st-key-home-search"] [data-testid="stVerticalBlockBorderWrapper"] {
+            background: linear-gradient(135deg, #ffffff 0%, #f4fbff 100%);
+            border: 1px solid #c9e9ee;
+            box-shadow: 0 14px 34px rgba(0, 169, 162, 0.12);
+        }
+        [class*="st-key-home-start"] [data-testid="stVerticalBlockBorderWrapper"],
+        [class*="st-key-home-library"] [data-testid="stVerticalBlockBorderWrapper"] {
+            background: linear-gradient(145deg, #ffffff 0%, #f7f9ff 100%);
+            border-top: 3px solid var(--navy);
+        }
+        [class*="st-key-home-capability"] [data-testid="stVerticalBlockBorderWrapper"] {
+            background: linear-gradient(145deg, #ffffff 0%, #f6fbff 100%);
+            border-top: 3px solid var(--teal);
+        }
+        [class*="st-key-home-capability"] h4 {
+            color: var(--navy);
+        }
+        [class*="st-key-home-flow"] {
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid #e0e6f5;
+            border-radius: 9px;
+            min-height: 9rem;
+            padding: 0.7rem;
+        }
+        [class*="st-key-home-flow"] [data-testid="stMarkdownContainer"] h4 {
+            color: var(--navy);
+            margin-top: 0.2rem;
+        }
+        [class*="st-key-home-flow"] [data-testid="stCaptionContainer"] {
+            color: var(--teal);
+            font-weight: 800;
         }
         [data-testid="stButton"] button,
         [data-testid="stPageLink"] a,
@@ -235,7 +273,7 @@ def render_citation(citation: dict, index: int, key_prefix: str = "citation") ->
     title = citation.get("title") or citation.get("document_id") or "Library source"
     page = citation.get("page")
     metadata = citation.get("metadata") or {}
-    with st.container(border=True):
+    with st.container(border=True, key="home-search"):
         st.markdown(f"**[{index}] {title}**")
         details = [
             citation.get("author") or metadata.get("author"),
@@ -305,19 +343,20 @@ def render_landing() -> None:
         ),
     ):
         with column:
-            st.caption(number)
-            st.markdown(f"#### {title}")
-            st.write(description)
+            with st.container(key=f"home-flow-{number}"):
+                st.caption(number)
+                st.markdown(f"#### {title}")
+                st.write(description)
 
     st.markdown("### Begin your research")
     start_column, library_column = st.columns(2)
     with start_column:
-        with st.container(border=True):
+        with st.container(border=True, key="home-start"):
             st.markdown("#### Research workspace")
             st.write("Ask a question and review the answer with citations.")
             st.page_link(RESEARCH_PAGE, label="Start researching", icon=":material/search:")
     with library_column:
-        with st.container(border=True):
+        with st.container(border=True, key="home-library"):
             st.markdown("#### Library documents")
             st.write("Search the academic collection before you ask.")
             st.page_link(LIBRARY_PAGE, label="Browse documents", icon=":material/library_books:")
@@ -340,7 +379,7 @@ def render_landing() -> None:
     )
     for column, (title, description) in zip(capability_columns, capabilities):
         with column:
-            with st.container(border=True):
+            with st.container(border=True, key=f"home-capability-{title.lower().replace(' ', '-')}"):
                 st.markdown(f"#### {title}")
                 st.write(description)
 
