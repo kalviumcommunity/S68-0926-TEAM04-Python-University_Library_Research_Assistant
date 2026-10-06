@@ -32,7 +32,7 @@ Answer Excerpt + Citations
 
 ## Key Features
 
-* 🔎 Search across processed academic documents
+* 🔎 Search across six processed academic documents
 * 🧭 Traceable page-level evidence
 * 📚 Research papers, theses, and course materials
 * 📌 Citation-backed responses
@@ -162,3 +162,6 @@ than an LLM-generated synthesis. The embedding model is downloaded by Chroma on
 first index creation and the local vector index is ignored by Git; run
 `python -m scripts.build_index` after cloning. Formal evaluation is available
 through `python -m scripts.evaluate_retrieval`.
+
+The checked-in metadata catalog currently covers six research papers and the
+local processing pipeline produced 528 indexed chunks from them.
