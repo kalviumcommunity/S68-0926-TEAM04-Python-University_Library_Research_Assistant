@@ -62,6 +62,35 @@ def render_landing() -> None:
             st.write("Search the academic collection before you ask.")
             st.page_link(LIBRARY_PAGE, label="Browse documents", icon=":material/library_books:")
 
+    st.markdown("### What you can do here")
+    capability_columns = st.columns(3)
+    capabilities = (
+        (
+            "Discover sources",
+            "Search the real academic catalog by title, author, subject, type, year, or document ID.",
+        ),
+        (
+            "Inspect evidence",
+            "Open one source to review its metadata, excerpt, page, chunk ID, and source link.",
+        ),
+        (
+            "Ask with confidence",
+            "Receive semantically retrieved evidence with traceable citations and an explicit no-evidence state.",
+        ),
+    )
+    for column, (title, description) in zip(capability_columns, capabilities):
+        with column:
+            with st.container(border=True):
+                st.markdown(f"#### {title}")
+                st.write(description)
+
+    st.markdown("### How the answer is grounded")
+    st.info(
+        "Your question is sent to the backend, matched against the indexed library "
+        "evidence using local embeddings and ChromaDB, and returned with the source "
+        "document, page, excerpt, and similarity score."
+    )
+
 
 def render_research_workspace() -> None:
     """Render the synthesis screen and its backend response states."""
@@ -164,6 +193,16 @@ def render_research_workspace() -> None:
                                 st.caption(f"Subject: {metadata['subject']}")
                             if citation.get("excerpt"):
                                 st.write(citation["excerpt"])
+                            if citation.get("chunk_id"):
+                                score = citation.get("score")
+                                score_text = (
+                                    f" · Similarity {score:.2f}"
+                                    if isinstance(score, (int, float))
+                                    else ""
+                                )
+                                st.caption(
+                                    f"Evidence chunk: {citation['chunk_id']}{score_text}"
+                                )
                             source_url = citation.get("source_url") or metadata.get(
                                 "source_url"
                             )
