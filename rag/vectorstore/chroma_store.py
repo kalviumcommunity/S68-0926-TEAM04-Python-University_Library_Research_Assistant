@@ -29,6 +29,8 @@ class ChromaStore:
         chunks: list[dict[str, Any]],
         embeddings: list[list[float]],
     ) -> int:
+        # Rebuilds must mirror the processed JSONL exactly and remove stale IDs.
+        self.reset()
         if len(chunks) != len(embeddings):
             raise ValueError("Every chunk must have one embedding.")
         ids: list[str] = []
@@ -89,6 +91,8 @@ class ChromaStore:
                 "section": metadata.pop("section", None) or None,
                 "metadata": metadata,
             }
+            # Chroma's cosine space returns distance = 1 - cosine similarity.
+            # Internally we expose only a higher-is-better similarity score.
             chunks.append(RetrievedChunk.from_chunk(chunk, 1.0 - float(distance)))
         return chunks
 

@@ -80,3 +80,42 @@ def test_citation_schema():
     assert citation.title == "Student Engagement Research"
     assert citation.page == 12
     assert citation.section == "Discussion"
+
+
+def test_transformer_answer_uses_top_semantic_evidence():
+    response = client.post(
+        "/chat",
+        json={"question": "What is the Transformer architecture?"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["citations"][0]["document_id"] == "1706.03762v7"
+    assert "stacked self-attention" in payload["answer"]
+    assert len(payload["answer"]) < len(payload["citations"][0]["excerpt"])
+    assert not payload["answer"].startswith("Figure")
+
+
+def test_definition_answer_prefers_definition_over_incidental_detail():
+    response = client.post("/chat", json={"question": "What is BERT?"})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["citations"]
+    assert payload["citations"][0]["document_id"] == "1810.04805v2"
+    assert "language representation model" in payload["answer"]
+    assert "80%, 10%, 10%" not in payload["answer"]
+    assert "Jacob Devlin" not in payload["answer"]
+    assert len(payload["citations"]) == 1
+
+
+def test_specific_question_can_select_detail_evidence():
+    response = client.post(
+        "/chat",
+        json={"question": "What masking strategy does BERT use?"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["citations"][0]["document_id"] == "1810.04805v2"
+    assert "MASK" in payload["answer"] or "mask" in payload["answer"]

@@ -32,7 +32,7 @@ Answer Excerpt + Citations
 
 ## Key Features
 
-* 🔎 Search across processed academic documents
+* 🔎 Search across six processed academic documents
 * 🧭 Traceable page-level evidence
 * 📚 Research papers, theses, and course materials
 * 📌 Citation-backed responses
@@ -162,3 +162,12 @@ than an LLM-generated synthesis. The embedding model is downloaded by Chroma on
 first index creation and the local vector index is ignored by Git; run
 `python -m scripts.build_index` after cloning. Formal evaluation is available
 through `python -m scripts.evaluate_retrieval`.
+
+The checked-in metadata catalog currently covers six research papers and the
+local processing pipeline produced 528 indexed chunks from them.
+
+Chroma uses cosine distance for its collection. Retrieval converts that value
+to a higher-is-better cosine similarity score with `score = 1 - distance`.
+General retrieval currently requires a calibrated minimum score of `0.40`;
+document-scoped investigation uses `0.25` because its candidate set is already
+restricted to one selected source.
