@@ -12,7 +12,7 @@ def test_chat_valid_request():
     response = client.post(
         "/chat",
         json={
-            "question": "What factors influence student engagement?",
+            "question": "retrieval augmented generation",
             "filters": {},
         },
     )
@@ -20,6 +20,7 @@ def test_chat_valid_request():
     assert response.status_code == 200
     assert response.json()["answer"]
     assert response.json()["citations"]
+    assert response.json()["has_evidence"] is True
 
 
 def test_chat_empty_question():

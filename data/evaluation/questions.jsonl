@@ -1,0 +1,10 @@
+{"question":"What is retrieval augmented generation?","expected_document_ids":["rag_survey.pdf"],"supported":true}
+{"question":"How does retrieval improve generation for knowledge intensive NLP tasks?","expected_document_ids":["knowledge_intensive_nlp.pdf"],"supported":true}
+{"question":"How can academic literature navigation use retrieval augmented generation?","expected_document_ids":["academic_literature_rag.pdf"],"supported":true}
+{"question":"What are the main components of a retrieval augmented generation system?","expected_document_ids":["rag_survey.pdf"],"supported":true}
+{"question":"What challenges arise when applying retrieval augmented generation to academic literature?","expected_document_ids":["academic_literature_rag.pdf"],"supported":true}
+{"question":"How do the academic literature and knowledge intensive NLP papers relate retrieval to generation?","expected_document_ids":["academic_literature_rag.pdf","knowledge_intensive_nlp.pdf"],"supported":true}
+{"question":"Compare retrieval augmented generation across the survey and academic literature papers.","expected_document_ids":["rag_survey.pdf","academic_literature_rag.pdf"],"supported":true}
+{"question":"What is the capital of France?","expected_document_ids":[],"supported":false}
+{"question":"Explain quantum teleportation experiments.","expected_document_ids":[],"supported":false}
+{"question":"What is the recipe for chocolate cake?","expected_document_ids":[],"supported":false}

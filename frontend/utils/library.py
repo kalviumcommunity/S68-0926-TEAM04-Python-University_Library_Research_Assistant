@@ -13,6 +13,8 @@ class LibraryDocument:
 
     metadata: DocumentMetadata
     excerpt: str | None = None
+    page: int | None = None
+    chunk_id: str | None = None
 
 
 def load_library_documents(
@@ -21,7 +23,7 @@ def load_library_documents(
 ) -> list[LibraryDocument]:
     """Load real document metadata and excerpts from processed chunks."""
     metadata = load_document_metadata(metadata_path)
-    excerpts: dict[str, str] = {}
+    excerpts: dict[str, tuple[str, int | None, str | None]] = {}
     chunks_file = Path(chunks_path)
     if chunks_file.is_file():
         with chunks_file.open(encoding="utf-8") as source:
@@ -29,10 +31,19 @@ def load_library_documents(
                 record = json.loads(line)
                 document_id = record["document_id"]
                 if document_id not in excerpts and record.get("text"):
-                    excerpts[document_id] = record["text"]
+                    excerpts[document_id] = (
+                        record["text"],
+                        record.get("page"),
+                        record.get("chunk_id"),
+                    )
 
     return [
-        LibraryDocument(document, excerpts.get(document_id))
+        LibraryDocument(
+            document,
+            excerpts.get(document_id, (None, None, None))[0],
+            excerpts.get(document_id, (None, None, None))[1],
+            excerpts.get(document_id, (None, None, None))[2],
+        )
         for document_id, document in sorted(metadata.items())
     ]
 

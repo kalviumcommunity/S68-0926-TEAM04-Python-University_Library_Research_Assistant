@@ -9,3 +9,4 @@ __pycache__/
 .env
 data/processed/*
 !data/processed/.gitkeep
+data/vectorstore/

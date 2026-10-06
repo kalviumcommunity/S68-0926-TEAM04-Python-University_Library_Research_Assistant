@@ -39,6 +39,7 @@ def test_chat_returns_explicit_no_evidence_state() -> None:
     assert response.json() == {
         "answer": "No supporting evidence was found in the library documents.",
         "citations": [],
+        "has_evidence": False,
     }
 
 

@@ -39,8 +39,22 @@ def ask_research_backend(
             "The research backend is unavailable or returned an invalid response."
         ) from error
 
+    return validate_chat_response(body)
+
+
+def validate_chat_response(body: object) -> dict[str, Any]:
+    """Validate the shared chat response without assuming optional citation fields."""
     if not isinstance(body, dict) or not isinstance(body.get("answer"), str):
         raise BackendRequestError("The research backend returned an invalid response.")
-    if not isinstance(body.get("citations"), list):
+    citations = body.get("citations")
+    if not isinstance(citations, list):
         raise BackendRequestError("The research backend returned invalid citations.")
-    return body
+    for citation in citations:
+        if not isinstance(citation, dict):
+            raise BackendRequestError("The research backend returned an invalid citation.")
+        if not isinstance(citation.get("document_id"), str):
+            raise BackendRequestError("The research backend returned an invalid citation.")
+    has_evidence = body.get("has_evidence", bool(citations))
+    if not isinstance(has_evidence, bool):
+        raise BackendRequestError("The research backend returned an invalid evidence flag.")
+    return {**body, "has_evidence": has_evidence}

@@ -9,7 +9,10 @@ University libraries contain large collections of academic documents, but studen
 
 ## Solution
 
-The current system retrieves relevant academic content with deterministic lexical matching and displays the supporting sources and citations alongside the response. LLM generation, embeddings, and vector search are planned follow-up work.
+The current system retrieves relevant academic content with local MiniLM embeddings
+and a persistent ChromaDB index, then displays supporting sources and citations
+alongside the response. The current answer is the best retrieved evidence excerpt;
+LLM synthesis remains a backend follow-up.
 
 ### How It Works
 
@@ -54,7 +57,7 @@ Answer Excerpt + Citations
 * PyMuPDF extraction
 * Cleaning and metadata
 * Configurable chunking
-* Deterministic lexical retrieval
+* Local MiniLM embeddings and ChromaDB semantic retrieval
 
 **Data & Testing**
 
@@ -135,6 +138,7 @@ From the repository root, install dependencies and process the PDFs:
 ```powershell
 python -m pip install -r requirements.txt
 python -m scripts.process_documents
+python -m scripts.build_index
 ```
 
 Start the backend in one terminal:
@@ -153,7 +157,8 @@ Open `http://127.0.0.1:8510`. Run the tests with `python -m pytest -q`.
 
 ## Current limitations
 
-Embeddings, ChromaDB, semantic vector retrieval, LLM generation, streaming, and
-formal RAG evaluation are not implemented in this prototype. The backend uses
-the processed JSONL chunks and deterministic lexical matching so that the
-end-to-end ingestion, citation, and frontend flow can be demonstrated honestly.
+The current backend returns the highest-ranked retrieved evidence excerpt rather
+than an LLM-generated synthesis. The embedding model is downloaded by Chroma on
+first index creation and the local vector index is ignored by Git; run
+`python -m scripts.build_index` after cloning. Formal evaluation is available
+through `python -m scripts.evaluate_retrieval`.
