@@ -709,6 +709,7 @@ def main() -> None:
         page_title="University Library Research Assistant",
         page_icon=":books:",
         layout="wide",
+        initial_sidebar_state="expanded",
     )
     inject_figma_theme()
     st.sidebar.markdown(
@@ -721,12 +722,9 @@ def main() -> None:
         unsafe_allow_html=True,
     )
     render_topbar()
-    page = st.navigation(
-        {
-            "Corpus & Exploration": [HOME_PAGE, LIBRARY_PAGE, INVESTIGATION_PAGE],
-            "Institutional": [RESEARCH_PAGE],
-        }
-    )
+    # Keep the original flat navigation so every existing page link and
+    # selection flow remains compatible with the earlier working app.
+    page = st.navigation([HOME_PAGE, LIBRARY_PAGE, INVESTIGATION_PAGE, RESEARCH_PAGE])
     page.run()
 
 
@@ -737,17 +735,17 @@ HOME_PAGE = st.Page(
 )
 LIBRARY_PAGE = st.Page(
     render_library_documents,
-    title="Search Sources",
+    title="Library documents",
     icon=":material/search:",
 )
 INVESTIGATION_PAGE = st.Page(
     render_document_investigation,
-    title="Document Viewer",
+    title="Document investigation",
     icon=":material/menu_book:",
 )
 RESEARCH_PAGE = st.Page(
     render_research_workspace,
-    title="Research Workspace",
+    title="Research workspace",
     icon=":material/workspace_premium:",
 )
 
