@@ -11,15 +11,12 @@ University libraries contain large collections of academic documents, but studen
 
 The current system retrieves relevant academic content with local MiniLM embeddings
 and a persistent ChromaDB index, then displays supporting sources and citations
-alongside the response. The current answer is the best retrieved evidence excerpt;
-LLM synthesis remains a backend follow-up.
+alongside a grounded backend-generated response.
 
 ### How It Works
 
 ```text
 Student Question
-      ↓
-Streamlit UI
       ↓
 Backend API
       ↓
@@ -27,7 +24,7 @@ RAG Retrieval
       ↓
 Relevant Academic Sources
       ↓
-Answer Excerpt + Citations
+    Grounded Answer + Citations
 ```
 
 ## Key Features
@@ -42,10 +39,6 @@ Answer Excerpt + Citations
 * 🔐 Environment-based secret management
 
 ## Tech Stack
-
-**Frontend**
-
-* Streamlit
 
 **Backend**
 
@@ -78,9 +71,8 @@ Answer Excerpt + Citations
 University-Library-RAG/
 ├── backend/       # API and AI integration
 ├── rag/           # Ingestion, retrieval, generation & evaluation
-├── frontend/      # Streamlit application
 ├── data/          # Raw, processed and sample documents
-├── tests/         # Backend, RAG, frontend & integration tests
+├── tests/         # Backend, RAG & integration tests
 ├── docs/          # PRD, architecture, API & evaluation docs
 ├── scripts/       # Ingestion and evaluation scripts
 ├── .env.example
@@ -94,7 +86,6 @@ University-Library-RAG/
 | ---------------------- | ----------------------------------------------------------------------------- |
 | AI/RAG Engineer        | Ingestion, chunking, embeddings, retrieval, grounding, citations & evaluation |
 | Backend/AI Integration | API, RAG integration, LLM orchestration, streaming, errors & infrastructure   |
-| Streamlit/Product      | UI, chat, citations, sources, filters, UX & project administration            |
 
 ## Development Workflow
 
@@ -147,19 +138,12 @@ Start the backend in one terminal:
 python -m uvicorn Backend.main:app --host 127.0.0.1 --port 8000
 ```
 
-Start Streamlit in a second terminal:
-
-```powershell
-python -m streamlit run frontend/app.py --server.address 127.0.0.1 --server.port 8510
-```
-
-Open `http://127.0.0.1:8510`. Run the tests with `python -m pytest -q`.
+Run the tests with `python -m pytest -q`.
 
 ## Current limitations
 
-The current backend returns the highest-ranked retrieved evidence excerpt rather
-than an LLM-generated synthesis. The embedding model is downloaded by Chroma on
-first index creation and the local vector index is ignored by Git; run
+The embedding model is downloaded by Chroma on first index creation and the local
+vector index is ignored by Git; run
 `python -m scripts.build_index` after cloning. Formal evaluation is available
 through `python -m scripts.evaluate_retrieval`.
 
