@@ -304,6 +304,8 @@ def render_document_card(library_document: LibraryDocument) -> None:
             st.caption(" · ".join(details))
         if library_document.excerpt:
             st.write(library_document.excerpt[:500].rstrip() + "...")
+            if library_document.page is not None:
+                st.caption(f"Preview evidence: page {library_document.page}")
         else:
             st.caption("No processed text excerpt is available.")
 
@@ -343,9 +345,25 @@ def render_document_investigation() -> None:
             st.caption(label)
             st.write(value or "Not available")
 
-    st.markdown("### Relevant evidence")
+    st.markdown("### DOCUMENT OVERVIEW")
+    st.write(
+        "This view focuses on one selected source and its available evidence, "
+        "rather than the full document repository."
+    )
+
+    st.markdown("### SOURCE INFORMATION")
+    if metadata.source_url:
+        st.markdown(f"Source URL: {metadata.source_url}")
+    else:
+        st.caption("No source URL is available for this document.")
+
+    st.markdown("### RELEVANT EVIDENCE")
     if document.excerpt:
         with st.container(border=True):
+            if document.page is not None:
+                st.caption(f"Page {document.page}")
+            if document.chunk_id:
+                st.caption(f"Evidence chunk: {document.chunk_id}")
             st.write(document.excerpt)
     else:
         st.info("No processed excerpt is available for this document.")
@@ -357,11 +375,13 @@ def render_document_investigation() -> None:
         label="Back to library documents",
         icon=":material/arrow_back:",
     )
-    st.page_link(
-        RESEARCH_PAGE,
-        label="Use this source in research",
-        icon=":material/arrow_forward:",
-    )
+    if st.button("Use this source in research", type="primary"):
+        st.session_state["research_question"] = (
+            f"Help me research the document: "
+            f"{metadata.title or metadata.document_id}"
+        )
+        st.session_state["workspace_state"] = "idle"
+        st.switch_page(RESEARCH_PAGE)
 
 
 def main() -> None:
