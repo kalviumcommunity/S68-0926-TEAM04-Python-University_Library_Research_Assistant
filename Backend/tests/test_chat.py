@@ -80,3 +80,15 @@ def test_citation_schema():
     assert citation.title == "Student Engagement Research"
     assert citation.page == 12
     assert citation.section == "Discussion"
+
+
+def test_transformer_answer_uses_top_semantic_evidence():
+    response = client.post(
+        "/chat",
+        json={"question": "What is the Transformer architecture?"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["citations"][0]["document_id"] == "1706.03762v7"
+    assert "stacked self-attention" in payload["answer"]

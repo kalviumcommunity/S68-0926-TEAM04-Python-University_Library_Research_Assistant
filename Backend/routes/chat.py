@@ -14,19 +14,19 @@ rag_service = RAGService()
 
 
 def _answer_from_evidence(evidence: list[dict]) -> str:
-    """Prefer explanatory prose over bibliography-like retrieved chunks."""
-    def quality(chunk: dict) -> tuple[int, float]:
+    """Select the strongest semantic evidence, breaking ties by prose quality."""
+    def quality(chunk: dict) -> tuple[float, int]:
         text = chunk.get("text", "")
         reference_count = len(re.findall(r"\[\d+\]", text))
         starts_like_references = int(
             text.lower().lstrip().startswith(("references", "bibliography"))
         )
         return (
-            reference_count + (starts_like_references * 10),
-            -float(chunk.get("score", 0.0)),
+            float(chunk.get("score", 0.0)),
+            -(reference_count + (starts_like_references * 10)),
         )
 
-    return min(evidence, key=quality)["text"]
+    return max(evidence, key=quality)["text"]
 
 
 @router.post("/chat", response_model=ChatResponse)
