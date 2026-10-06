@@ -11,6 +11,153 @@ from frontend.utils.library import (
 )
 
 
+def inject_figma_theme() -> None:
+    """Apply the visual language from the exported Library Assistant screens."""
+    st.html(
+        """
+        <style>
+        :root {
+            --ink: #18264a;
+            --muted: #65708c;
+            --navy: #193b91;
+            --navy-dark: #122c72;
+            --lavender: #f6f7ff;
+            --panel: #ffffff;
+            --line: #dfe4f2;
+            --teal: #00a9a2;
+            --teal-soft: #d9f7f3;
+            --gold: #f0ba50;
+        }
+        [data-testid="stAppViewContainer"] {
+            background: var(--lavender);
+            color: var(--ink);
+        }
+        [data-testid="stHeader"] {
+            background: rgba(246, 247, 255, 0.96);
+        }
+        [data-testid="stSidebar"] {
+            background: #fbfcff;
+            border-right: 1px solid var(--line);
+        }
+        [data-testid="stSidebar"] > div:first-child {
+            padding-top: 1rem;
+        }
+        [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
+            color: var(--muted);
+            font-size: 0.76rem;
+        }
+        h1, h2, h3, h4 {
+            color: var(--ink);
+            letter-spacing: -0.02em;
+        }
+        h1 { font-size: clamp(2.1rem, 4vw, 3.7rem); line-height: 1.02; }
+        h2 { font-size: 1.55rem; }
+        h3 { font-size: 1.05rem; }
+        [data-testid="stVerticalBlockBorderWrapper"] {
+            border-color: var(--line);
+            border-radius: 10px;
+            background: var(--panel);
+            box-shadow: 0 8px 26px rgba(25, 59, 145, 0.05);
+        }
+        [data-testid="stButton"] button,
+        [data-testid="stPageLink"] a,
+        [data-testid="stLinkButton"] a {
+            border-radius: 5px;
+            font-weight: 600;
+        }
+        [data-testid="stButton"] button[kind="primary"] {
+            background: var(--navy);
+            border-color: var(--navy);
+            color: white;
+        }
+        [data-testid="stButton"] button[kind="primary"]:hover {
+            background: var(--navy-dark);
+            border-color: var(--navy-dark);
+        }
+        [data-testid="stTextInput"] input,
+        [data-testid="stTextArea"] textarea,
+        [data-testid="stSelectbox"] div[data-baseweb="select"] > div {
+            border-color: var(--line);
+            border-radius: 5px;
+            background: white;
+        }
+        [data-testid="stMetric"] {
+            background: white;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 0.8rem;
+        }
+        .fig-topbar {
+            align-items: center;
+            background: white;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            color: var(--ink);
+            display: flex;
+            font-size: 0.78rem;
+            gap: 1.1rem;
+            justify-content: space-between;
+            margin: -0.4rem 0 1.4rem;
+            padding: 0.55rem 0.8rem;
+        }
+        .fig-brand { color: var(--navy); font-weight: 800; }
+        .fig-brand small { color: var(--muted); display: block; font-size: 0.58rem; letter-spacing: 0.08em; }
+        .fig-chip {
+            background: var(--teal-soft);
+            border-radius: 999px;
+            color: #007d78;
+            font-size: 0.64rem;
+            font-weight: 700;
+            padding: 0.22rem 0.55rem;
+        }
+        .fig-eyebrow {
+            color: #007d78;
+            font-size: 0.66rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        .fig-hero {
+            background: linear-gradient(135deg, #f1f7ff 0%, #fff 54%, #eefbfd 100%);
+            border: 1px solid #d9e5f6;
+            border-radius: 12px;
+            padding: 3rem 2rem 2.5rem;
+            text-align: center;
+        }
+        .fig-hero p { color: var(--muted); margin: 0 auto 1.2rem; max-width: 720px; }
+        .fig-label {
+            color: var(--muted);
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .fig-evidence {
+            border-left: 3px solid var(--teal);
+            background: #f3fbfb;
+            padding: 0.8rem 1rem;
+        }
+        .fig-muted { color: var(--muted); font-size: 0.8rem; }
+        </style>
+        """
+    )
+
+
+def render_topbar() -> None:
+    """Render the compact utility bar used by the reference screens."""
+    st.html(
+        """
+        <div class="fig-topbar">
+          <div class="fig-brand">Library Assistant<small>UNIVERSITY KNOWLEDGE CORE</small></div>
+          <span>Corpus</span><span>Workspace in use</span>
+          <span class="fig-chip">Term: Spring 2025 · 142k cataloged papers</span>
+          <span class="fig-muted">Search catalog, DOI, or citations...</span>
+          <span class="fig-chip">Index Online</span>
+        </div>
+        """
+    )
+
+
 def clear_research_state() -> None:
     """Clear the active question, answer, citations, and errors."""
     for key in (
@@ -58,11 +205,31 @@ def render_citation(citation: dict, index: int, key_prefix: str = "citation") ->
 
 def render_landing() -> None:
     """Introduce the product and expose the two primary entry points."""
-    st.header("Research smarter with your library")
-    st.write(
-        "Find concise, citation-backed explanations grounded in the "
-        "university's academic document collection."
+    st.html(
+        """
+        <section class="fig-hero">
+          <div class="fig-eyebrow">Grounding in indexed university research documents · powered by RAG</div>
+          <h1>Research smarter.<br>Find the evidence.</h1>
+          <p>Ask questions across university research papers, doctoral theses, and verified course materials. Get concise, citation-backed explanations grounded directly in peer-reviewed scholarship.</p>
+        </section>
+        """
     )
+
+    st.markdown("### Start with a research question")
+    with st.container(border=True):
+        with st.form("landing_search_form"):
+            landing_question = st.text_input(
+                "Research question",
+                placeholder="Ask an academic question or enter a research topic",
+                label_visibility="collapsed",
+            )
+            start = st.form_submit_button("Start researching", type="primary")
+        if start:
+            if landing_question.strip():
+                st.session_state["research_question"] = landing_question.strip()
+                st.switch_page(RESEARCH_PAGE)
+            else:
+                st.warning("Enter a research question before starting.")
 
     st.markdown("### From discovery to synthesis")
     flow_columns = st.columns(4)
@@ -127,6 +294,7 @@ def render_landing() -> None:
 
 def render_research_workspace() -> None:
     """Render the synthesis screen and its backend response states."""
+    st.markdown('<div class="fig-eyebrow">Active query expression</div>', unsafe_allow_html=True)
     st.subheader("Research workspace")
     st.caption("Synthesize evidence into a concise, citation-backed response.")
     st.caption(
@@ -143,7 +311,7 @@ def render_research_workspace() -> None:
                 height=120,
             )
             submitted = st.form_submit_button(
-                "Ask the library",
+                "Run research",
                 type="primary",
             )
 
@@ -170,7 +338,7 @@ def render_research_workspace() -> None:
                 st.session_state["workspace_error"] = str(error)
                 st.session_state["workspace_state"] = "error"
 
-    st.markdown("### QUESTION")
+    st.markdown("### ACTIVE QUERY")
     with st.container(border=True):
         if st.session_state.get("research_question"):
             st.write(st.session_state["research_question"])
@@ -179,7 +347,7 @@ def render_research_workspace() -> None:
 
     answer_column, sources_column = st.columns(2)
     with answer_column:
-        st.markdown("### ANSWER")
+        st.markdown("### SYNTHESIS & LITERATURE FINDINGS")
         with st.container(border=True):
             state = st.session_state.get("workspace_state")
             if state == "error":
@@ -196,7 +364,7 @@ def render_research_workspace() -> None:
                 st.info("Your grounded answer will appear here after you ask a question.")
 
     with sources_column:
-        st.markdown("### SOURCES / CITATIONS")
+        st.markdown("### SOURCES USED")
         with st.container(border=True):
             if st.session_state.get("workspace_state") in {"answer", "no_evidence"}:
                 citations = st.session_state["research_response"]["citations"]
@@ -252,7 +420,8 @@ def get_library_documents() -> list[LibraryDocument]:
 
 def render_library_documents() -> None:
     """Render document discovery from the real processed catalog."""
-    st.subheader("Library documents")
+    st.markdown('<div class="fig-eyebrow">Corpus index v7.8 · synchronized library catalog</div>', unsafe_allow_html=True)
+    st.subheader("Search library document repository")
     st.caption(
         "Search the academic documents currently available in the processed "
         "library catalog."
@@ -360,6 +529,7 @@ def render_document_card(library_document: LibraryDocument) -> None:
 
 def render_document_investigation() -> None:
     """Provide the evidence-inspection screen defined by the product flow."""
+    st.markdown('<div class="fig-eyebrow">Document viewer · evidence inspection</div>', unsafe_allow_html=True)
     st.subheader("Document investigation")
     st.caption("Inspect a source before using it in your research synthesis.")
 
@@ -480,28 +650,36 @@ def main() -> None:
         page_icon=":books:",
         layout="wide",
     )
-    st.title("University Library Research Assistant")
+    inject_figma_theme()
+    render_topbar()
     page = st.navigation(
-        [HOME_PAGE, LIBRARY_PAGE, INVESTIGATION_PAGE, RESEARCH_PAGE]
+        {
+            "Corpus & Exploration": [HOME_PAGE, LIBRARY_PAGE, INVESTIGATION_PAGE],
+            "Institutional": [RESEARCH_PAGE],
+        }
     )
     page.run()
 
 
-HOME_PAGE = st.Page(render_landing, title="Home", icon=":material/home:")
+HOME_PAGE = st.Page(
+    render_landing,
+    title="Home",
+    icon=":material/home:",
+)
 LIBRARY_PAGE = st.Page(
     render_library_documents,
-    title="Library documents",
-    icon=":material/library_books:",
+    title="Search Sources",
+    icon=":material/search:",
 )
 INVESTIGATION_PAGE = st.Page(
     render_document_investigation,
-    title="Document investigation",
+    title="Document Viewer",
     icon=":material/menu_book:",
 )
 RESEARCH_PAGE = st.Page(
     render_research_workspace,
-    title="Research workspace",
-    icon=":material/search:",
+    title="Research Workspace",
+    icon=":material/workspace_premium:",
 )
 
 
