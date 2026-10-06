@@ -381,7 +381,7 @@ def render_citation(citation: dict, index: int, key_prefix: str = "citation") ->
     title = citation.get("title") or citation.get("document_id") or "Library source"
     page = citation.get("page")
     metadata = citation.get("metadata") or {}
-    with st.container(border=True, key="home-search"):
+    with st.container(border=True, key=f"{key_prefix}-citation-{index}"):
         st.markdown(f"**[{index}] {title}**")
         details = [
             citation.get("author") or metadata.get("author"),
