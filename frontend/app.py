@@ -36,15 +36,59 @@ def inject_figma_theme() -> None:
             background: rgba(246, 247, 255, 0.96);
         }
         [data-testid="stSidebar"] {
-            background: #fbfcff;
-            border-right: 1px solid var(--line);
+            background: #ffffff;
+            border-right: 1px solid #e4e8f3;
+            min-width: 13rem;
+            width: 13rem;
         }
         [data-testid="stSidebar"] > div:first-child {
-            padding-top: 1rem;
+            padding: 0.55rem 0.45rem 0.8rem;
         }
         [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
             color: var(--muted);
-            font-size: 0.76rem;
+            font-size: 0.68rem;
+            line-height: 1.35;
+        }
+        [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] strong {
+            color: var(--navy);
+            font-size: 0.82rem;
+        }
+        [data-testid="stSidebar"] [data-testid="stSidebarNav"] {
+            padding-top: 0.2rem;
+        }
+        [data-testid="stSidebar"] [data-testid="stSidebarNav"]::before {
+            color: var(--muted);
+            content: "CORPUS & EXPLORATION";
+            display: block;
+            font-size: 0.57rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            margin: 0.65rem 0.55rem 0.35rem;
+        }
+        [data-testid="stSidebar"] [data-testid="stSidebarNav"] a {
+            border-radius: 3px;
+            color: #38425c;
+            font-size: 0.72rem;
+            margin: 0.1rem 0;
+            padding: 0.42rem 0.55rem;
+        }
+        [data-testid="stSidebar"] [data-testid="stSidebarNav"] a:hover {
+            background: #eef2ff;
+            color: var(--navy);
+        }
+        [data-testid="stSidebar"] [data-testid="stSidebarNav"] a[aria-current="page"] {
+            background: var(--navy);
+            color: white;
+        }
+        [data-testid="stSidebar"] [data-testid="stSidebarNav"] a[aria-current="page"] span {
+            color: white;
+        }
+        [data-testid="stSidebar"] [data-testid="stSidebarNav"] a svg {
+            height: 0.85rem;
+            width: 0.85rem;
+        }
+        [data-testid="stSidebar"] [data-testid="stSidebarNav"] > ul {
+            gap: 0;
         }
         h1, h2, h3, h4 {
             color: var(--ink);
@@ -91,22 +135,23 @@ def inject_figma_theme() -> None:
             align-items: center;
             background: white;
             border: 1px solid var(--line);
-            border-radius: 8px;
+            border-radius: 4px;
             color: var(--ink);
             display: flex;
-            font-size: 0.78rem;
-            gap: 1.1rem;
+            font-size: 0.65rem;
+            gap: 0.8rem;
             justify-content: space-between;
-            margin: -0.4rem 0 1.4rem;
-            padding: 0.55rem 0.8rem;
+            margin: -0.4rem 0 0.8rem;
+            min-height: 2rem;
+            padding: 0.25rem 0.55rem;
         }
-        .fig-brand { color: var(--navy); font-weight: 800; }
-        .fig-brand small { color: var(--muted); display: block; font-size: 0.58rem; letter-spacing: 0.08em; }
+        .fig-brand { color: var(--navy); font-size: 0.69rem; font-weight: 800; }
+        .fig-brand small { color: var(--muted); display: block; font-size: 0.45rem; letter-spacing: 0.06em; }
         .fig-chip {
             background: var(--teal-soft);
             border-radius: 999px;
             color: #007d78;
-            font-size: 0.64rem;
+            font-size: 0.55rem;
             font-weight: 700;
             padding: 0.22rem 0.55rem;
         }
@@ -138,6 +183,21 @@ def inject_figma_theme() -> None:
             padding: 0.8rem 1rem;
         }
         .fig-muted { color: var(--muted); font-size: 0.8rem; }
+        .fig-sidebar-brand {
+            border-bottom: 1px solid var(--line);
+            color: var(--navy);
+            font-size: 0.78rem;
+            font-weight: 800;
+            line-height: 1.15;
+            padding: 0.3rem 0.45rem 0.8rem;
+        }
+        .fig-sidebar-brand small {
+            color: var(--muted);
+            display: block;
+            font-size: 0.46rem;
+            letter-spacing: 0.07em;
+            margin-top: 0.25rem;
+        }
         </style>
         """
     )
@@ -651,6 +711,15 @@ def main() -> None:
         layout="wide",
     )
     inject_figma_theme()
+    st.sidebar.markdown(
+        """
+        <div class="fig-sidebar-brand">
+          Library Assistant
+          <small>UNIVERSITY KNOWLEDGE CORE</small>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     render_topbar()
     page = st.navigation(
         {
