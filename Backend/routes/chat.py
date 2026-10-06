@@ -4,6 +4,8 @@ from collections.abc import Iterable
 from fastapi import APIRouter, HTTPException, status
 
 from Backend.schemas.chat import ChatRequest, ChatResponse
+from Backend.schemas.citation import Citation
+from Backend.services.llm_service import LLMService, LLMServiceError
 from Backend.services.rag_service import (
     RAGService,
     RAGServiceUnavailable,
@@ -12,6 +14,31 @@ from Backend.services.rag_service import (
 router = APIRouter()
 
 rag_service = RAGService()
+llm_service = LLMService()
+
+
+def _citation_from_evidence(evidence: dict) -> Citation:
+    metadata = evidence.get("metadata")
+    if not isinstance(metadata, dict):
+        metadata = {}
+    page = evidence.get("page", metadata.get("page"))
+    if page is not None:
+        try:
+            page = int(page)
+        except (TypeError, ValueError):
+            page = None
+    return Citation(
+        chunk_id=evidence.get("chunk_id"),
+        document_id=str(evidence.get("document_id", "")),
+        title=str(metadata.get("title") or evidence.get("document_id", "")),
+        author=metadata.get("author"),
+        excerpt=evidence.get("text"),
+        page=page,
+        section=evidence.get("section", metadata.get("section")),
+        source_url=metadata.get("source_url"),
+        score=evidence.get("score"),
+        metadata=metadata,
+    )
 
 
 _STOP_WORDS = {
@@ -157,26 +184,15 @@ def chat(request: ChatRequest):
                 has_evidence=False,
             )
 
-        answer, used_chunks = _answer_from_evidence(request.question, evidence)
+        generated = llm_service.generate(request.question, evidence)
         return ChatResponse(
-            answer=answer,
+            answer=generated.answer,
             citations=[
-                {
-                    "citation_id": index + 1,
-                    "chunk_id": chunk.get("chunk_id"),
-                    "document_id": chunk["document_id"],
-                    "title": chunk["metadata"].get("title")
-                    or chunk["document_id"],
-                    "author": chunk["metadata"].get("author"),
-                    "excerpt": chunk.get("text"),
-                    "page": chunk.get("page"),
-                    "section": chunk.get("section"),
-                    "source_url": chunk["metadata"].get("source_url"),
-                    "score": chunk.get("score"),
-                    "metadata": chunk["metadata"],
-                }
-                for index, chunk in enumerate(evidence)
-                if index in used_chunks
+                _citation_from_evidence(evidence[citation_id - 1]).model_copy(
+                    update={"citation_id": citation_id}
+                )
+                for citation_id in generated.citation_ids
+                if 1 <= citation_id <= len(evidence)
             ],
             has_evidence=True,
         )
@@ -186,6 +202,9 @@ def chat(request: ChatRequest):
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=str(exc),
         )
+
+    except LLMServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=str(exc))
 
     except Exception:
         raise HTTPException(
